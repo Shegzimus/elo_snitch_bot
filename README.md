@@ -1,0 +1,1 @@
+A bot to snitch on the elo progress of members of the League of Naija group chat
