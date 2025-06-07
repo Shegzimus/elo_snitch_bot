@@ -4,9 +4,12 @@ from dotenv import load_dotenv
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 import pandas as pd
+from sqlalchemy import create_engine
 
 # Load environment variables from .env file
 load_dotenv()
+engine = create_engine("postgresql://root:root@localhost:5432/snitch_bot_db") # will only work if the docker DB container is running
+
 
 def get_puuid(api_key:str, summoner_name:str, region:str="EUW")-> str:
     api_key = os.getenv("riot_api_key")
@@ -64,5 +67,46 @@ def fetch_google_sheet_data(
 # resp = get_puuid(api_key, "Shegz")
 # print(resp)
 
-data = fetch_google_sheet_data()
-print(data)
+# data = fetch_google_sheet_data()
+# print(data)
+
+
+def load_to_db(df: pd.DataFrame, table_name: str, db_connection:object= engine) -> None:   # using a connection object argument instead of a hard-coded engine in case we want to use a cloud database in the future
+    """
+    Load DataFrame to a database table.
+    
+    :param data: DataFrame to load
+    :param table_name: Name of the database table
+    :param db_connection: Database connection object
+    """
+    
+    if df.empty:
+        print("No data to load.")
+        return
+    
+    df.head(0).to_sql(name=table_name, con=db_connection, if_exists='replace')
+
+    # df.to_sql(table_name, con=db_connection, if_exists='append', index=False)
+    print("Table header created successfully")
+    # print(f"Data loaded to {table_name} successfully.")
+
+    # df.columns = df.iloc[0]
+    # df = df[1:]
+
+    df.to_sql(name=table_name, con=db_connection, if_exists='replace')
+
+
+
+    # for index, row in df.iterrows():
+    #     df.columns = df.iloc[0]  # Set the first row as header
+    #     # df = df[1:]
+    #     df.to_sql(name=table_name, con=db_connection, if_exists='append', index=False)
+    #     print(f"Row {index + 1} loaded successfully.")
+
+    return None
+
+df = fetch_google_sheet_data()
+# df.to_csv("form_responses.csv", index=False)  # Save to CSV for debugging
+# print(df.head(0))
+# print(df.columns)
+# load_to_db(df, table_name="form_responses", db_connection=engine)  # Load to database
