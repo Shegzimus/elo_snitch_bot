@@ -11,24 +11,7 @@ load_dotenv()
 engine = create_engine("postgresql://root:root@localhost:5432/snitch_bot_db") # will only work if the docker DB container is running
 
 
-def get_puuid(api_key:str, summoner_name:str, region:str="EUW")-> str:
-    api_key = os.getenv("riot_api_key")
-    if not api_key:
-        raise ValueError("API key is not set in environment variables.")
-    if not summoner_name:
-        raise ValueError("Summoner name is required.")
-    if not region:
-        raise ValueError("Region is required.")
-    
-    url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{summoner_name}/{region}?api_key={api_key}"
-    headers = {"X-Riot-Token": api_key}
-    response = requests.get(url, headers=headers)
-    
-    if response.status_code == 200:
-        return response.json().get("puuid")
-    else:
-        print(f"Error: {response.status_code} - {response.text}")
-        return None
+
     
 
 
@@ -59,7 +42,18 @@ def fetch_google_sheet_data(
     sheet = service.spreadsheets()
     result = sheet.values().get(spreadsheetId=sheet_id, range=range_name).execute()
     values = result.get('values', [])
+
+    # Minor transformations
     values_df = pd.DataFrame(values[1:], columns=values[0])  # Convert to DataFrame
+    values_df.rename(columns={
+        'Timestamp': 'timestamp',  
+        "Tag line (e.g #EUW) ": "player_tag",
+        "Summoner ID (case sensitive)": "summ_id",
+        "Region": "region"
+    }, inplace=True)
+
+    values_df['timestamp'] = pd.to_datetime(values_df['timestamp'], errors='coerce')  # Convert timestamp to datetime
+    values_df['player_tag'] = values_df['player_tag'].str.lstrip("#")  # Strip whitespace from player_tag
 
     return values_df
 
@@ -72,41 +66,24 @@ def fetch_google_sheet_data(
 
 
 def load_to_db(df: pd.DataFrame, table_name: str, db_connection:object= engine) -> None:   # using a connection object argument instead of a hard-coded engine in case we want to use a cloud database in the future
-    """
-    Load DataFrame to a database table.
-    
-    :param data: DataFrame to load
-    :param table_name: Name of the database table
-    :param db_connection: Database connection object
-    """
+
     
     if df.empty:
         print("No data to load.")
         return
     
     df.head(0).to_sql(name=table_name, con=db_connection, if_exists='replace')
-
-    # df.to_sql(table_name, con=db_connection, if_exists='append', index=False)
     print("Table header created successfully")
-    # print(f"Data loaded to {table_name} successfully.")
-
-    # df.columns = df.iloc[0]
-    # df = df[1:]
 
     df.to_sql(name=table_name, con=db_connection, if_exists='replace')
 
-
-
-    # for index, row in df.iterrows():
-    #     df.columns = df.iloc[0]  # Set the first row as header
-    #     # df = df[1:]
-    #     df.to_sql(name=table_name, con=db_connection, if_exists='append', index=False)
-    #     print(f"Row {index + 1} loaded successfully.")
-
     return None
 
-df = fetch_google_sheet_data()
+
 # df.to_csv("form_responses.csv", index=False)  # Save to CSV for debugging
 # print(df.head(0))
 # print(df.columns)
-# load_to_db(df, table_name="form_responses", db_connection=engine)  # Load to database
+
+
+df = fetch_google_sheet_data()
+load_to_db(df, table_name="form_responses", db_connection=engine)  # Load to database
