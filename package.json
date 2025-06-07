@@ -1,0 +1,17 @@
+{
+  "name": "lol-whatsapp-bot",
+  "version": "1.0.0",
+  "description": "League of Legends WhatsApp Bot for rank tracking",
+  "main": "whatsapp_bot.js",
+  "scripts": {
+    "start": "node whatsapp_bot.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.30.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
