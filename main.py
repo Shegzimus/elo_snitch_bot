@@ -3,11 +3,10 @@ import os
 from dotenv import load_dotenv
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
+import pandas as pd
 
 # Load environment variables from .env file
 load_dotenv()
-
-
 
 def get_puuid(api_key:str, summoner_name:str, region:str="EUW")-> str:
     api_key = os.getenv("riot_api_key")
@@ -28,8 +27,6 @@ def get_puuid(api_key:str, summoner_name:str, region:str="EUW")-> str:
         print(f"Error: {response.status_code} - {response.text}")
         return None
     
-
-
 
 
 def fetch_google_sheet_data(
@@ -59,10 +56,9 @@ def fetch_google_sheet_data(
     sheet = service.spreadsheets()
     result = sheet.values().get(spreadsheetId=sheet_id, range=range_name).execute()
     values = result.get('values', [])
+    values_df = pd.DataFrame(values[1:], columns=values[0])  # Convert to DataFrame
 
-    return values
-
-
+    return values_df
 
 
 # resp = get_puuid(api_key, "Shegz")
