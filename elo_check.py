@@ -6,23 +6,27 @@ from sqlalchemy import create_engine
 
 load_dotenv()
 # Create a database connection
-engine = create_engine("postgresql://root:root@localhost:5432/snitch_bot_db")
+engine:object = create_engine("postgresql://root:root@localhost:5432/snitch_bot_db")
 
 
 def fetch_puuid(db_connection: object) -> pd.DataFrame:
     with db_connection.connect() as connection:
-        df = pd.read_sql(
+        df: pd.DataFrame = pd.read_sql(
             "SELECT id, puuid FROM public.puuid", 
             connection, 
             index_col='id')
+        if df.empty:
+            print("No PUUID data found.")
+        else:
+            print(f"Fetched {len(df)} rows of PUUID data.")
         return df
 
 def elo_check() -> tuple[list, list]:
-    solo_queue_elo = []
-    flex_queue_elo = []
-    api_key = os.getenv("riot_api_key")
+    solo_queue_elo: list = []
+    flex_queue_elo: list = []
+    api_key: str = os.getenv("riot_api_key")
 
-    puuid_df = fetch_puuid(db_connection=engine)
+    puuid_df: pd.DataFrame = fetch_puuid(db_connection=engine)
     if puuid_df.empty:
         print("No PUUID data found.")
         return [], []  # Return empty lists instead of DataFrame
