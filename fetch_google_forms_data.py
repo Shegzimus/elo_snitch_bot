@@ -8,7 +8,7 @@ from sqlalchemy import create_engine
 
 # Load environment variables from .env file
 load_dotenv()
-engine = create_engine("postgresql://root:root@localhost:5432/snitch_bot_db") # will only work if the docker DB container is running
+engine:object = create_engine("postgresql://root:root@localhost:5432/snitch_bot_db") # will only work if the docker DB container is running
 
 
 
@@ -19,7 +19,7 @@ def fetch_google_sheet_data(
         range_name:str="Form Responses 1!A:D", 
         credentials_path:str=".google/credentials.json"
         )-> None:
-    sheet_id = os.getenv("google_sheet_id")
+    sheet_id:str = os.getenv("google_sheet_id")
     
     if not sheet_id:
         raise ValueError("Google Sheet ID is not set in environment variables.")
