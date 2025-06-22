@@ -97,6 +97,25 @@ async function sendMessage(to, text) {
     }
 }
 
+// Add this function to read the latest ELO changes
+async function sendEloUpdates() {
+    try {
+        // Get the latest JSON file
+        const fs = require('fs');
+        const path = require('path');
+        const files = fs.readdirSync('.');
+        const eloFiles = files.filter(file => file.startsWith('elo_changes_'));
+        const latestFile = eloFiles.sort().pop();
+        
+        if (latestFile) {
+            const data = JSON.parse(fs.readFileSync(latestFile, 'utf8'));
+            await client.sendMessage(groupChatId, data.message);
+        }
+    } catch (error) {
+        console.error('Error sending ELO updates:', error);
+    }
+}
+
 // Listen for messages
 // client.on('message', async message => {
 //     if (message.body === '!test') {

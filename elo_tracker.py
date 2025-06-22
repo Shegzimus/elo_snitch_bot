@@ -76,6 +76,7 @@ def track_elo_changes():
                 tier = queue["tier"]
                 rank = queue["rank"]
                 lp = queue["leaguePoints"]
+                store_elo_snapshot(queue)
                 
                 # Find previous ELO for this player and queue
                 previous_data = None
@@ -119,6 +120,45 @@ def track_elo_changes():
         )
     
     return changes
+
+def store_elo_snapshot(data):
+    """Store a complete snapshot of all players' ELO data"""
+    timestamp = datetime.now()
+    for entry in data:
+        entry['timestamp'] = timestamp
+        # Insert into elo_history table
+
+def get_player_progression(player_id, queue_type, days=30):
+    """Get ELO progression for a player over time"""
+    query = """
+    SELECT 
+        timestamp,
+        tier,
+        rank,
+        league_points,
+        wins,
+        losses
+    FROM elo_history
+    WHERE player_id = :player_id
+    AND queue_type = :queue_type
+    AND timestamp >= NOW() - INTERVAL :days days
+    ORDER BY timestamp ASC
+    """
+    return pd.read_sql(query, engine, params={
+        'player_id': player_id,
+        'queue_type': queue_type,
+        'days': days
+    })
+
+def calculate_progress_metrics(progress_data):
+    """Calculate useful metrics from progression data"""
+    return {
+        'total_lp_change': progress_data['league_points'].diff().sum(),
+        'average_daily_change': progress_data['league_points'].diff().mean(),
+        'win_rate': (progress_data['wins'].diff() / 
+                    (progress_data['wins'].diff() + progress_data['losses'].diff())).mean(),
+        'rank_changes': len(progress_data[progress_data['tier'].shift() != progress_data['tier']])
+    }
 
 def format_whatsapp_message(changes):
     if not changes:
