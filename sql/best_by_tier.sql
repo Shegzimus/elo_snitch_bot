@@ -12,11 +12,11 @@ WITH joined_data AS (
 ),
 ranked_players AS (
     SELECT 
-        jd.summ_id, 
-        sq.tier, 
-        sq.rank, 
-        sq."leaguePoints", 
-        sq.wins, 
+        jd.summ_id,
+        sq.tier,
+        sq.rank,
+        sq."leaguePoints",
+        sq.wins,
         sq.losses,
         (sq.wins + sq.losses) AS total_played,
         ROUND(((sq.wins::float / (sq.wins + sq.losses)) * 100)::numeric, 2) AS win_rate,
