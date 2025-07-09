@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine
 
 load_dotenv()
-# Create a database connection
 engine:object = create_engine("postgresql://root:root@localhost:5432/snitch_bot_db")
 
 
@@ -29,7 +28,7 @@ def elo_check() -> tuple[list, list]:
     puuid_df: pd.DataFrame = fetch_puuid(db_connection=engine)
     if puuid_df.empty:
         print("No PUUID data found.")
-        return [], []  # Return empty lists instead of DataFrame
+        return [], []
     
     for idx, row in puuid_df.iterrows():
         id_val = idx  # Renamed from 'id' to avoid shadowing built-in
@@ -50,15 +49,14 @@ def elo_check() -> tuple[list, list]:
             flex_queue_elo.append(flex_queue)
         else:
             print(f"Failed for ID: {id_val}, Status code: {response.status_code}, Response: {response.text}")
-            # Add None for failed requests to maintain list alignment
             solo_queue_elo.append(None)
             flex_queue_elo.append(None)
 
-    return solo_queue_elo, flex_queue_elo
+    return solo_queue_elo, flex_queue_elo, puuid_df
 
 
 def main():
-    solo_queue_elo, flex_queue_elo = elo_check()
+    solo_queue_elo, flex_queue_elo, puuid_df = elo_check()
 
     # Filter out None values and create DataFrames directly from the list of dictionaries
     solo_queue_data = [item for item in solo_queue_elo if item is not None]
@@ -75,13 +73,35 @@ def main():
     
     # Only proceed if we have data
     if not solo_df.empty:
-        solo_df.to_sql(name="solo_queue", con=engine, if_exists='replace', index=False)
+        # Filter puuid_df to match the length of solo_df
+        valid_player_ids = [puuid_df.index[i] for i, elo in enumerate(solo_queue_elo) if elo is not None]
+        # Add player_id, queue_type, and timestamp columns
+        solo_df['queue_type'] = 'RANKED_SOLO_5x5'
+        solo_df['player_id'] = valid_player_ids
+        solo_df['timestamp'] = pd.Timestamp.now()
+        # Select only the columns we need
+        solo_df = solo_df[['timestamp','player_id', 'queue_type', 'tier', 'rank', 'leaguePoints', 'wins', 'losses', ]]
+        # Rename columns to match the database schema
+        solo_df = solo_df.rename(columns={'leaguePoints': 'league_points'})
+        # Append to elo_history table
+        solo_df.to_sql(name="elo_history", con=engine, if_exists='append', index=False)
         print("Solo queue data loaded successfully into the database.")
     else:
         print("No solo queue data to load.")
         
     if not flex_df.empty:
-        flex_df.to_sql(name="flex_queue", con=engine, if_exists='replace', index=False)
+        # Filter puuid_df to match the length of flex_df
+        valid_player_ids = [puuid_df.index[i] for i, elo in enumerate(flex_queue_elo) if elo is not None]
+        # Add player_id, queue_type, and timestamp columns
+        flex_df['queue_type'] = 'RANKED_FLEX_SR'
+        flex_df['player_id'] = valid_player_ids
+        flex_df['timestamp'] = pd.Timestamp.now()
+        # Select only the columns we need
+        flex_df = flex_df[['timestamp','player_id', 'queue_type', 'tier', 'rank', 'leaguePoints', 'wins', 'losses' ]]
+        # Rename columns to match the database schema
+        flex_df = flex_df.rename(columns={'leaguePoints': 'league_points'})
+        # Append to elo_history table
+        flex_df.to_sql(name="elo_history", con=engine, if_exists='append', index=False)
         print("Flex queue data loaded successfully into the database.")
     else:
         print("No flex queue data to load.")
