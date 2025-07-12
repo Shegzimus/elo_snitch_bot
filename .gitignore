@@ -2,3 +2,4 @@ venv
 .env
 .google
 snitch_bot_postgres_data
+.vscode/settings.json
