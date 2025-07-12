@@ -1,0 +1,209 @@
+{
+  "message": "*ELO CHANGES UPDATE*\n\n\u2022 0 (Solo/Duo Queue):\n  Rank: PLATINUM III\n  LP: 16 (-49 LP)\n\n\u2022 1 (Solo/Duo Queue):\n  Rank: GOLD III\n  LP: 5 (-43 LP - Division IV -> III)\n\n\u2022 2 (Solo/Duo Queue):\n  Rank: GOLD III\n  LP: 82 (-14 LP)\n\n\u2022 2 (Flex Queue):\n  Rank: BRONZE IV\n  LP: 66 (+26 LP)\n\n\u2022 3 (Flex Queue):\n  Rank: BRONZE II\n  LP: 24 (-12 LP)\n\n\u2022 5 (Solo/Duo Queue):\n  Rank: BRONZE I\n  LP: 33 (-45 LP - Division II -> I)\n\n\u2022 10 (Solo/Duo Queue):\n  Rank: GOLD II\n  LP: 82 (+68 LP - Division II -> I)\n\n\u2022 10 (Flex Queue):\n  Rank: BRONZE I\n  LP: 99 (+31 LP)\n\n\u2022 11 (Solo/Duo Queue):\n  Rank: BRONZE III\n  LP: 21 (+1 LP)\n\n\u2022 12 (Solo/Duo Queue):\n  Rank: IRON I\n  LP: 75 (+75 LP - DEMOTED from BRONZE to IRON)\n\n\u2022 13 (Solo/Duo Queue):\n  Rank: GOLD IV\n  LP: 38 (+5 LP)\n\n\u2022 15 (Solo/Duo Queue):\n  Rank: IRON I\n  LP: 90 (-5 LP)\n\n\u2022 15 (Flex Queue):\n  Rank: SILVER IV\n  LP: 43 (-1 LP)\n\n\u2022 16 (Solo/Duo Queue):\n  Rank: BRONZE II\n  LP: 21 (-67 LP)\n\n\u2022 19 (Solo/Duo Queue):\n  Rank: PLATINUM IV\n  LP: 18 (+18 LP)\n\n\u2022 22 (Solo/Duo Queue):\n  Rank: SILVER IV\n  LP: 36 (+4 LP)\n\n\u2022 23 (Solo/Duo Queue):\n  Rank: SILVER II\n  LP: 30 (-45 LP - Division II -> I)\n\n\u2022 27 (Solo/Duo Queue):\n  Rank: BRONZE I\n  LP: 33 (+4 LP)\n\n\u2022 28 (Solo/Duo Queue):\n  Rank: SILVER II\n  LP: 27 (-34 LP - Division II -> I)\n\n\u2022 33 (Solo/Duo Queue):\n  Rank: PLATINUM III\n  LP: 29 (-50 LP)\n\n\u2022 33 (Flex Queue):\n  Rank: PLATINUM III\n  LP: 70 (+10 LP)\n\n\u2022 34 (Flex Queue):\n  Rank: BRONZE II\n  LP: 60 (-12 LP)\n\n\u2022 36 (Solo/Duo Queue):\n  Rank: PLATINUM III\n  LP: 69 (+49 LP)\n\n\u2022 39 (Solo/Duo Queue):\n  Rank: SILVER IV\n  LP: 0 (-17 LP)\n\n\u2022 40 (Solo/Duo Queue):\n  Rank: BRONZE III\n  LP: 17 (-1 LP)\n\n\u2022 41 (Solo/Duo Queue):\n  Rank: SILVER II\n  LP: 1 (-28 LP - Division II -> I)\n\n\u2022 43 (Flex Queue):\n  Rank: PLATINUM IV\n  LP: 53 (-13 LP)\n\n\u2022 47 (Solo/Duo Queue):\n  Rank: GOLD IV\n  LP: 0 (-31 LP - PROMOTED from SILVER to GOLD)\n\n\u2022 49 (Solo/Duo Queue):\n  Rank: SILVER III\n  LP: 82 (+29 LP - Division IV -> III)\n\n",
+  "timestamp": "2025-07-12_22-10-01",
+  "changes": [
+    {
+      "id": 0,
+      "queue": "Solo/Duo Queue",
+      "tier": "PLATINUM III",
+      "lp": 16,
+      "change": "-49 LP"
+    },
+    {
+      "id": 1,
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD III",
+      "lp": 5,
+      "change": "-43 LP - Division IV -> III"
+    },
+    {
+      "id": 2,
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD III",
+      "lp": 82,
+      "change": "-14 LP"
+    },
+    {
+      "id": 2,
+      "queue": "Flex Queue",
+      "tier": "BRONZE IV",
+      "lp": 66,
+      "change": "+26 LP"
+    },
+    {
+      "id": 3,
+      "queue": "Flex Queue",
+      "tier": "BRONZE II",
+      "lp": 24,
+      "change": "-12 LP"
+    },
+    {
+      "id": 5,
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE I",
+      "lp": 33,
+      "change": "-45 LP - Division II -> I"
+    },
+    {
+      "id": 10,
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD II",
+      "lp": 82,
+      "change": "+68 LP - Division II -> I"
+    },
+    {
+      "id": 10,
+      "queue": "Flex Queue",
+      "tier": "BRONZE I",
+      "lp": 99,
+      "change": "+31 LP"
+    },
+    {
+      "id": 11,
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE III",
+      "lp": 21,
+      "change": "+1 LP"
+    },
+    {
+      "id": 12,
+      "queue": "Solo/Duo Queue",
+      "tier": "IRON I",
+      "lp": 75,
+      "change": "+75 LP - DEMOTED from BRONZE to IRON"
+    },
+    {
+      "id": 13,
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 38,
+      "change": "+5 LP"
+    },
+    {
+      "id": 15,
+      "queue": "Solo/Duo Queue",
+      "tier": "IRON I",
+      "lp": 90,
+      "change": "-5 LP"
+    },
+    {
+      "id": 15,
+      "queue": "Flex Queue",
+      "tier": "SILVER IV",
+      "lp": 43,
+      "change": "-1 LP"
+    },
+    {
+      "id": 16,
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE II",
+      "lp": 21,
+      "change": "-67 LP"
+    },
+    {
+      "id": 19,
+      "queue": "Solo/Duo Queue",
+      "tier": "PLATINUM IV",
+      "lp": 18,
+      "change": "+18 LP"
+    },
+    {
+      "id": 22,
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER IV",
+      "lp": 36,
+      "change": "+4 LP"
+    },
+    {
+      "id": 23,
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER II",
+      "lp": 30,
+      "change": "-45 LP - Division II -> I"
+    },
+    {
+      "id": 27,
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE I",
+      "lp": 33,
+      "change": "+4 LP"
+    },
+    {
+      "id": 28,
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER II",
+      "lp": 27,
+      "change": "-34 LP - Division II -> I"
+    },
+    {
+      "id": 33,
+      "queue": "Solo/Duo Queue",
+      "tier": "PLATINUM III",
+      "lp": 29,
+      "change": "-50 LP"
+    },
+    {
+      "id": 33,
+      "queue": "Flex Queue",
+      "tier": "PLATINUM III",
+      "lp": 70,
+      "change": "+10 LP"
+    },
+    {
+      "id": 34,
+      "queue": "Flex Queue",
+      "tier": "BRONZE II",
+      "lp": 60,
+      "change": "-12 LP"
+    },
+    {
+      "id": 36,
+      "queue": "Solo/Duo Queue",
+      "tier": "PLATINUM III",
+      "lp": 69,
+      "change": "+49 LP"
+    },
+    {
+      "id": 39,
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER IV",
+      "lp": 0,
+      "change": "-17 LP"
+    },
+    {
+      "id": 40,
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE III",
+      "lp": 17,
+      "change": "-1 LP"
+    },
+    {
+      "id": 41,
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER II",
+      "lp": 1,
+      "change": "-28 LP - Division II -> I"
+    },
+    {
+      "id": 43,
+      "queue": "Flex Queue",
+      "tier": "PLATINUM IV",
+      "lp": 53,
+      "change": "-13 LP"
+    },
+    {
+      "id": 47,
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 0,
+      "change": "-31 LP - PROMOTED from SILVER to GOLD"
+    },
+    {
+      "id": 49,
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER III",
+      "lp": 82,
+      "change": "+29 LP - Division IV -> III"
+    }
+  ]
+}
