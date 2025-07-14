@@ -1,0 +1,15 @@
+# Project-specific dependencies
+requests==2.31.0
+pandas==2.0.3
+python-dotenv==1.0.0
+
+# WhatsApp integration
+python-whatsapp-bot==1.0.0
+
+# Database utilities
+psycopg2-binary==2.9.9  # Explicit version for compatibility
+SQLAlchemy==2.0.23     # Explicit version for compatibility
+
+# Utility packages
+python-dateutil==2.8.2
+pytz==2025.1
