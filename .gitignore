@@ -3,3 +3,5 @@ venv
 .google
 snitch_bot_postgres_data
 .vscode/settings.json
+pgadmin.env
+airflow.env
