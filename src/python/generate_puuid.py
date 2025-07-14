@@ -58,7 +58,6 @@ def get_puuid() -> dict:
 
     return id_puuid_map
 
-
 def main():
     puuid_map = get_puuid()
     if puuid_map:
