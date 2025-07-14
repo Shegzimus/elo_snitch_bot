@@ -1,19 +1,72 @@
 services:
   pgdatabase:
     image: postgres:13
-    environment:
-      - POSTGRES_USER=root
-      - POSTGRES_PASSWORD=root
-      - POSTGRES_DB=snitch_bot_db
+    env_file:
+      - pgadmin.env
     volumes:
       - "./snitch_bot_postgres_data:/var/lib/postgresql/data:rw"
     ports:
       - "5432:5432"
   pgadmin:
     image: dpage/pgadmin4
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
-      - PGADMIN_DEFAULT_PASSWORD=root
+    env_file:
+      - pgadmin.env
     ports:
       - "8080:80"
-    
+    depends_on:
+      - pgdatabase
+
+  airflow_postgres:
+    image: postgres:15-alpine
+    env_file:
+      - airflow.env
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./airflow_postgres_data:/var/lib/postgresql/data
+
+  airflow-webserver:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8080"
+    env_file:
+      - airflow.env
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+    depends_on:
+      - airflow_postgres
+
+  airflow-scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - airflow.env
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+    depends_on:
+      - airflow_postgres
+
+  airflow-init:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - airflow.env
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+    depends_on:
+      - airflow_postgres
+    entrypoint: airflow db init
+
+volumes:
+  airflow_postgres_data:
+  snitch_bot_postgres_data:
