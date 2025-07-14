@@ -2,6 +2,8 @@
 
 A bot to track and report on the ELO progress of members of the League of Naija group chat.
 
+Developer hours wasted: [![wakatime](https://wakatime.com/badge/user/7bb4aa36-0e0a-4c8e-9ce5-180c23c37a37/project/3587c415-099d-40f9-afd5-0869b61cfe72.svg)](https://wakatime.com/badge/user/7bb4aa36-0e0a-4c8e-9ce5-180c23c37a37/project/3587c415-099d-40f9-afd5-0869b61cfe72)
+
 ## Prerequisites
 
 Before running the bot, ensure you have the following installed:
@@ -69,4 +71,3 @@ The bot runs hourly and executes the following tasks in sequence:
 - For Riot API rate limiting issues, consider implementing a retry mechanism or increasing the delay between API calls
 - Check Docker logs for detailed error messages: `docker-compose logs`
 
-Developer hours wasted: [![wakatime](https://wakatime.com/badge/user/7bb4aa36-0e0a-4c8e-9ce5-180c23c37a37/project/3587c415-099d-40f9-afd5-0869b61cfe72.svg)](https://wakatime.com/badge/user/7bb4aa36-0e0a-4c8e-9ce5-180c23c37a37/project/3587c415-099d-40f9-afd5-0869b61cfe72)
