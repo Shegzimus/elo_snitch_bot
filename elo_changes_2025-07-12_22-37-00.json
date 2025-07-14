@@ -1,0 +1,34 @@
+{
+  "message": "*ELO CHANGES UPDATE*\n\n\u2022 1 (Solo/Duo Queue):\n  Rank: GOLD III\n  LP: 30 (+25 LP)\n\n\u2022 19 (Flex Queue):\n  Rank: BRONZE II\n  LP: 99 (+38 LP)\n\n\u2022 28 (Solo/Duo Queue):\n  Rank: SILVER III\n  LP: 73 (+46 LP - Division III -> II)\n\n\u2022 39 (Solo/Duo Queue):\n  Rank: SILVER IV\n  LP: 46 (+46 LP)\n\n",
+  "timestamp": "2025-07-12_22-37-00",
+  "changes": [
+    {
+      "id": 1,
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD III",
+      "lp": 30,
+      "change": "+25 LP"
+    },
+    {
+      "id": 19,
+      "queue": "Flex Queue",
+      "tier": "BRONZE II",
+      "lp": 99,
+      "change": "+38 LP"
+    },
+    {
+      "id": 28,
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER III",
+      "lp": 73,
+      "change": "+46 LP - Division III -> II"
+    },
+    {
+      "id": 39,
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER IV",
+      "lp": 46,
+      "change": "+46 LP"
+    }
+  ]
+}
