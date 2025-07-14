@@ -1,0 +1,40 @@
+{
+  "message": "*ELO CHANGES UPDATE*\n\n\n*TOP 5 CHANGES:*\n\u2022 #1 (Player DC Nalphstein): BRONZE III (3 LP) -47 LP\n\u2022 #2 (Player KT PapaChiibs ): BRONZE III (20 LP) -9 LP - Division III -> II\n\n*FULL CHANGES:*\n\u2022 Solo/Duo Queue:\n  Player: DC Nalphstein\n  Rank: BRONZE III\n  LP: 3 (-47 LP)\n\n  Player: KT PapaChiibs \n  Rank: BRONZE III\n  LP: 20 (-9 LP - Division III -> II)\n\n",
+  "timestamp": "2025-07-14_22-37-12",
+  "changes": [
+    {
+      "summ_id": "DC Nalphstein",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE III",
+      "lp": 3,
+      "change": "-47 LP"
+    },
+    {
+      "summ_id": "KT PapaChiibs ",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE III",
+      "lp": 20,
+      "change": "-9 LP - Division III -> II"
+    }
+  ],
+  "top_changes": [
+    {
+      "rank": 1,
+      "summ_id": "DC Nalphstein",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE III",
+      "lp": 3,
+      "change": "-47 LP",
+      "absolute_change": 47
+    },
+    {
+      "rank": 2,
+      "summ_id": "KT PapaChiibs ",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE III",
+      "lp": 20,
+      "change": "-9 LP - Division III -> II",
+      "absolute_change": 9
+    }
+  ]
+}
