@@ -4,7 +4,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 
-load_dotenv()
+load_dotenv(dotenv_path="config/.env")
 # Create a database connection
 engine = create_engine("postgresql://root:root@localhost:5432/snitch_bot_db")
 
@@ -24,7 +24,7 @@ def get_puuid() -> dict:
     id_puuid_map = {}  # Dictionary to store id and puuid mapping
     api_key = os.getenv("riot_api_key")
     
-    if not api_key and not os.path.exists(".env"):
+    if not api_key and not os.path.exists("config/.env"):
         raise ValueError("API key is not set in environment variables or .env file is missing.")
     if not api_key:
         raise ValueError("API key is not set in environment variables.")
