@@ -26,14 +26,17 @@ client.on('ready', () => {
     console.log('Client is ready!');
     console.log('Bot is now active and monitoring messages...');
     
-    // Send the test message to the group
-    client.sendMessage(process.env.WHATSAPP_GROUP_ID, testMessage)
-        .then(() => {
-            console.log('Message sent successfully!');
-        })
-        .catch(err => {
-            console.error('Error sending message:', err);
-        });
+    // Add a small delay before sending the test message
+    setTimeout(() => {
+        // Send the test message to the group
+        client.sendMessage(process.env.WHATSAPP_GROUP_ID, testMessage)
+            .then(() => {
+                console.log('Message sent successfully!');
+            })
+            .catch(err => {
+                console.error('Error sending message:', err);
+            });
+    }, 1000); // 1 second delay
 });
 
 // Handle disconnection
@@ -52,11 +55,31 @@ client.on('error', (err) => {
 
 // Function to get the latest ELO changes file
 function getLatestEloFile() {
-    const files = fs.readdirSync('.').filter(file => file.startsWith('elo_changes_'));
+    const eloChangesDir = '../../data/elo_changes';
+    
+    // Get all date folders
+    const folders = fs.readdirSync(eloChangesDir)
+        .filter(item => fs.statSync(`${eloChangesDir}/${item}`).isDirectory());
+    
+    if (folders.length === 0) {
+        return null;
+    }
+    
+    // Get the latest folder (sorted by date)
+    const latestFolder = folders.sort().pop();
+    const latestFolderPath = `${eloChangesDir}/${latestFolder}`;
+    
+    // Get all JSON files in the latest folder
+    const files = fs.readdirSync(latestFolderPath)
+        .filter(file => file.endsWith('.json'));
+    
     if (files.length === 0) {
         return null;
     }
-    return files.sort().pop();
+    
+    // Get the latest file (sorted by timestamp)
+    const latestFile = files.sort().pop();
+    return `${latestFolderPath}/${latestFile}`;
 }
 
 // Function to format ELO changes data
