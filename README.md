@@ -57,6 +57,32 @@ Once the containers are running:
    - Username: admin
    - Password: admin
 
+## Directory Structure
+
+```
+elo_snitch_bot/
+├── assets/               # Static assets
+├── config/               # Configuration files
+├── dags/                 # Airflow DAG definitions
+├── data/                 # Data storage directory
+│   └── elo_changes/     # ELO change history
+├── docker/              # Docker configuration
+├── logs/                # Application logs
+├── node_modules/        # JavaScript dependencies
+├── plugins/             # Custom plugins
+├── sql/                 # SQL scripts
+├── src/
+│   ├── python/         # Python source code
+│   │   ├── generate_puuid.py  # Player PUUID generation
+│   │   ├── elo_check.py       # ELO checking
+│   │   └── elo_tracker.py     # ELO tracking and reporting
+│   └── js/            # JavaScript source code
+│       └── whatsapp_bot.js    # WhatsApp bot implementation
+├── .env                 # Environment variables
+├── Dockerfile           # Docker configuration
+└── docker-compose.yaml  # Docker Compose configuration
+```
+
 ## Pipeline Overview
 
 The bot runs hourly and executes the following tasks in sequence:
