@@ -1,0 +1,102 @@
+{
+  "message": "*ELO CHANGES UPDATE*\n\n\n*TOP 5 CHANGES:*\n\u2022 #1 (Player Rahzzcal): SILVER I (75 LP) +75 LP - DEMOTED from GOLD to SILVER\n\u2022 #2 (Player SRM Silverfangs): PLATINUM II (14 LP) -74 LP - Division III -> II\n\u2022 #3 (Player OTPStormbringer): SILVER I (3 LP) -52 LP - Division II -> I\n\u2022 #4 (Player DheAbyss): SILVER II (33 LP) -49 LP - Division III -> II\n\u2022 #5 (Player Monteng): PLATINUM II (22 LP) -29 LP - Division III -> II\n\n*FULL CHANGES:*\n\u2022 Solo/Duo Queue:\n  Player: OTPStormbringer\n  Rank: SILVER I\n  LP: 3 (-52 LP - Division II -> I)\n\n  Player: Monteng\n  Rank: PLATINUM II\n  LP: 22 (-29 LP - Division III -> II)\n\n  Player: marvyiscool\n  Rank: BRONZE IV\n  LP: 87 (-3 LP)\n\n  Player: SRM Silverfangs\n  Rank: PLATINUM II\n  LP: 14 (-74 LP - Division III -> II)\n\n  Player: Rahzzcal\n  Rank: SILVER I\n  LP: 75 (+75 LP - DEMOTED from GOLD to SILVER)\n\n  Player: DheAbyss\n  Rank: SILVER II\n  LP: 33 (-49 LP - Division III -> II)\n\n\u2022 Flex Queue:\n  Player: Jueviol\n  Rank: IRON III\n  LP: 20 (-21 LP)\n\n",
+  "timestamp": "2025-07-15_19-50-14",
+  "changes": [
+    {
+      "summ_id": "OTPStormbringer",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER I",
+      "lp": 3,
+      "change": "-52 LP - Division II -> I"
+    },
+    {
+      "summ_id": "Jueviol",
+      "queue": "Flex Queue",
+      "tier": "IRON III",
+      "lp": 20,
+      "change": "-21 LP"
+    },
+    {
+      "summ_id": "Monteng",
+      "queue": "Solo/Duo Queue",
+      "tier": "PLATINUM II",
+      "lp": 22,
+      "change": "-29 LP - Division III -> II"
+    },
+    {
+      "summ_id": "marvyiscool",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE IV",
+      "lp": 87,
+      "change": "-3 LP"
+    },
+    {
+      "summ_id": "SRM Silverfangs",
+      "queue": "Solo/Duo Queue",
+      "tier": "PLATINUM II",
+      "lp": 14,
+      "change": "-74 LP - Division III -> II"
+    },
+    {
+      "summ_id": "Rahzzcal",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER I",
+      "lp": 75,
+      "change": "+75 LP - DEMOTED from GOLD to SILVER"
+    },
+    {
+      "summ_id": "DheAbyss",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER II",
+      "lp": 33,
+      "change": "-49 LP - Division III -> II"
+    }
+  ],
+  "top_changes": [
+    {
+      "rank": 1,
+      "summ_id": "Rahzzcal",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER I",
+      "lp": 75,
+      "change": "+75 LP - DEMOTED from GOLD to SILVER",
+      "absolute_change": 75
+    },
+    {
+      "rank": 2,
+      "summ_id": "SRM Silverfangs",
+      "queue": "Solo/Duo Queue",
+      "tier": "PLATINUM II",
+      "lp": 14,
+      "change": "-74 LP - Division III -> II",
+      "absolute_change": 74
+    },
+    {
+      "rank": 3,
+      "summ_id": "OTPStormbringer",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER I",
+      "lp": 3,
+      "change": "-52 LP - Division II -> I",
+      "absolute_change": 52
+    },
+    {
+      "rank": 4,
+      "summ_id": "DheAbyss",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER II",
+      "lp": 33,
+      "change": "-49 LP - Division III -> II",
+      "absolute_change": 49
+    },
+    {
+      "rank": 5,
+      "summ_id": "Monteng",
+      "queue": "Solo/Duo Queue",
+      "tier": "PLATINUM II",
+      "lp": 22,
+      "change": "-29 LP - Division III -> II",
+      "absolute_change": 29
+    }
+  ]
+}
