@@ -96,7 +96,7 @@ function formatTopChanges(data) {
                          `*${change.change}*` : 
                          change.change;
         
-        message += `#${index + 1} (${change.summ_id}): ${change.tier} (${change.lp} LP) ${changeText}\n`;
+        message += `#${index + 1} ${change.summ_id}: ${change.tier} (${change.lp} LP) ${changeText}\n`;
     });
     
     return message;
@@ -127,7 +127,7 @@ function formatFullChanges(data) {
                              `*${change.change}*` : 
                              change.change;
             
-            message += `  ${index + 1}. (${change.summ_id}): ${change.tier} (${change.lp} LP) ${changeText}\n`;
+            message += `  ${index + 1}. ${change.summ_id}: ${change.tier} (${change.lp} LP) ${changeText}\n`;
         });
         message += '\n';
     });
