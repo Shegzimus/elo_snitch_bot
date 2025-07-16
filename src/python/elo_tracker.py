@@ -140,9 +140,9 @@ def calculate_elo_change(
         old_div_idx = get_division_index(old_division)
         new_div_idx = get_division_index(new_division)
         
-        if new_div_idx < old_div_idx:
+        if new_div_idx > old_div_idx:
             division_change = f"{DIVISION_ORDER[old_div_idx]} -> {DIVISION_ORDER[new_div_idx]}"
-        elif new_div_idx > old_div_idx:
+        elif new_div_idx < old_div_idx:
             division_change = f"{DIVISION_ORDER[new_div_idx]} -> {DIVISION_ORDER[old_div_idx]}"
     
     # Format total change message
