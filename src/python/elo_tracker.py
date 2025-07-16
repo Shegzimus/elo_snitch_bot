@@ -274,32 +274,32 @@ def track_elo_changes()-> List[Dict[str, Any]]:
     
     return changes
 
-def get_player_progression(
-    player_id: int, 
-    queue_type: str, 
-    days: int=30
-    )-> pd.DataFrame:
+# def get_player_progression(
+#     player_id: int, 
+#     queue_type: str, 
+#     days: int=30
+#     )-> pd.DataFrame:
 
-    """Get ELO progression for a player over time"""
-    query = """
-    SELECT 
-        timestamp,
-        tier,
-        rank,
-        league_points,
-        wins,
-        losses
-    FROM elo_history
-    WHERE player_id = :player_id
-    AND queue_type = :queue_type
-    AND timestamp >= NOW() - INTERVAL :days days
-    ORDER BY timestamp ASC
-    """
-    return pd.read_sql(query, engine, params={
-        'player_id': player_id,
-        'queue_type': queue_type,
-        'days': days
-    })
+#     """Get ELO progression for a player over time"""
+#     query = """
+#     SELECT 
+#         timestamp,
+#         tier,
+#         rank,
+#         league_points,
+#         wins,
+#         losses
+#     FROM elo_history
+#     WHERE player_id = :player_id
+#     AND queue_type = :queue_type
+#     AND timestamp >= NOW() - INTERVAL :days days
+#     ORDER BY timestamp ASC
+#     """
+#     return pd.read_sql(query, engine, params={
+#         'player_id': player_id,
+#         'queue_type': queue_type,
+#         'days': days
+#     })
 
 def format_whatsapp_message(changes:list)-> str:
     message = MESSAGE_HEADER
