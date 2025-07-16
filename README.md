@@ -39,24 +39,6 @@ RIOT_REGION=na1
 AIRFLOW__CORE__LOAD_EXAMPLES=False
 AIRFLOW__CORE__EXECUTOR=LocalExecutor
 ```
-
-## Installation
-
-1. Clone the repository
-2. Create and configure your `.env` file as described above
-3. Build and start the Docker containers:
-```bash
-docker-compose up --build
-```
-
-## Accessing the Application
-
-Once the containers are running:
-1. Access Airflow UI at http://localhost:8080
-2. Default credentials:
-   - Username: admin
-   - Password: admin
-
 ## Directory Structure
 
 ```
@@ -82,6 +64,24 @@ elo_snitch_bot/
 ├── Dockerfile           # Docker configuration
 └── docker-compose.yaml  # Docker Compose configuration
 ```
+
+## Installation
+
+1. Clone the repository
+2. Create and configure your `.env` file as described above
+3. Build and start the Docker containers:
+```bash
+docker-compose up --build
+```
+
+## Accessing the Application
+
+Once the containers are running:
+1. Access Airflow UI at http://localhost:8080
+2. Default credentials:
+   - Username: admin
+   - Password: admin
+
 
 ## Pipeline Overview
 
