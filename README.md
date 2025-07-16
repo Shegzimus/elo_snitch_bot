@@ -16,15 +16,21 @@ Before running the bot, ensure you have the following installed:
    - Create a Google Cloud project
    - Enable Google Forms API and Google Sheets API
    - Create credentials (OAuth 2.0 Client ID)
-   - Download credentials JSON file
+   - Download credentials JSON file, rename it to credentials.json and place it in the .google directory.
 
 3. **Riot Games API Key**
    - Register at [Riot Games Developer Portal](https://developer.riotgames.com/)
-   - Generate a developer API key
-
+   - Generate a developer API key, rename it to riot_api_key and place it in the .env directory.
+  
+4. **WhatsApp Group ID**
+   - Open your WhatsApp group of choice on WhatsApp Web
+   - Inspect the page elements of the group chat
+   - Copy the group ID from the HTML element with the class name 'chat-title'
+   - Declare it as whatsapp_group_id in the .env directory.
+   
 ## Environment Setup
 
-1. Create a `.env` file in the project root directory with the following variables:
+1. Create a `.env` file in the config directory with the following variables:
 ```
 # Google API Credentials
 GOOGLE_APPLICATION_CREDENTIALS=path/to/credentials.json
