@@ -36,7 +36,7 @@ client.on('ready', () => {
             .catch(err => {
                 console.error('Error sending message:', err);
             });
-    }, 1000); // 1 second delay
+    }, 4000); // 4 second delay
 });
 
 // Handle disconnection
