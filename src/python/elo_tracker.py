@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from datetime import datetime
 import json
+from typing import Tuple, Dict, List
 
 load_dotenv()
 
@@ -18,7 +19,7 @@ QUEUE_TYPES = {
 }
 
 # Helper function to format tier/rank
-def format_tier_rank(tier, rank):
+def format_tier_rank(tier: str, rank: str)-> str:
     return f"{tier} {rank}" if rank else tier
 
 # Constants for tier and division order
@@ -66,7 +67,7 @@ def calculate_absolute_change(change_str: str)-> int:
     return 0
 
 # Function to get top N changes by absolute lp change
-def get_top_changes(changes: list, n: int=5)-> list:
+def get_top_changes(changes: List[Dict[str, Any]], n: int=5)-> List[Dict[str, Any]]:
     """
     Get top N changes by absolute ELO change value
     Returns a list of top changes sorted by absolute change (descending)
@@ -106,7 +107,7 @@ def calculate_elo_change(
     new_tier: str,
     new_division: str,
     new_lp: int
-    )-> dict:
+    )-> Dict[str, Any]:
     
     """
     Calculate comprehensive ELO change including tier and division changes
@@ -180,7 +181,7 @@ def fetch_puuid(db_connection: object)-> pd.DataFrame:
         """, connection)
         return df
 
-def fetch_previous_elo(db_connection: object)-> pd.DataFrame:
+def fetch_previous_elo(db_connection: object)-> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     with db_connection.connect() as connection:
         # Fetch the last two scans from elo_history
         query = """
@@ -212,7 +213,7 @@ def fetch_previous_elo(db_connection: object)-> pd.DataFrame:
         
         return current_solo, current_flex, previous_solo, previous_flex
 
-def track_elo_changes()-> list:
+def track_elo_changes()-> List[Dict[str, Any]]:
     puuid_df = fetch_puuid(engine)
     if puuid_df.empty:
         print("No PUUID data found.")
