@@ -23,7 +23,7 @@ def format_tier_rank(tier: str, rank: str)-> str:
     return f"{tier} {rank}" if rank else tier
 
 # Constants for tier and division order
-TIER_ORDER = [
+TIER_ORDER:list[str] = [
     "IRON",
     "BRONZE",
     "SILVER",
@@ -36,8 +36,22 @@ TIER_ORDER = [
     "CHALLENGER"
 ]
 
-DIVISION_ORDER = ["I", "II", "III", "IV"]
+DIVISION_ORDER:list[str] = ["I", "II", "III", "IV"]
 
+def get_current_date_time()-> Tuple[str, str]:
+    now = datetime.now()
+    date_str = now.strftime("%Y-%m-%d")
+    timestamp = now.strftime("%Y-%m-%d_%H-%M-%S")
+    return date_str, timestamp
+
+def create_daily_directory()-> Tuple[str, str]:
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    date_str = datetime.now().strftime("%Y-%m-%d")
+    data_dir = os.path.join(project_root, "data", "elo_changes")
+    daily_dir = os.path.join(data_dir, date_str)
+    os.makedirs(daily_dir, exist_ok=True)
+    return data_dir, daily_dir
+    
 # Helper function to get tier index
 def get_tier_index(tier: str)-> int:
     return TIER_ORDER.index(tier)
@@ -371,18 +385,10 @@ def main()->None:
             python_top_changes.append(python_top_change)
         
         # Get current date and time
-        now = datetime.now()
-        date_str = now.strftime("%Y-%m-%d")
-        timestamp = now.strftime("%Y-%m-%d_%H-%M-%S")
-        
-        # Get project root directory
-        project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-        
+        date_str, timestamp = get_current_date_time()
+    
         # Create daily directory if it doesn't exist
-        data_dir = os.path.join(project_root, "data", "elo_changes")
-        daily_dir = os.path.join(data_dir, date_str)
-        os.makedirs(daily_dir, exist_ok=True)
-        
+        data_dir, daily_dir = create_daily_directory()
         # Create a symlink to the latest file
         latest_path = os.path.join(data_dir, "latest.json")
         
