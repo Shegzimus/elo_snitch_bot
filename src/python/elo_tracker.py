@@ -67,7 +67,7 @@ def calculate_absolute_change(change_str: str)-> int:
     return 0
 
 # Function to get top N changes by absolute lp change
-def get_top_changes(changes: List[Dict[str, Any]], n: int=5)-> List[Dict[str, Any]]:
+def get_top_changes(changes: List[Dict[str, any]], n: int=5)-> List[Dict[str, any]]:
     """
     Get top N changes by absolute ELO change value
     Returns a list of top changes sorted by absolute change (descending)
@@ -107,7 +107,7 @@ def calculate_elo_change(
     new_tier: str,
     new_division: str,
     new_lp: int
-    )-> Dict[str, Any]:
+    )-> Dict[str, any]:
     
     """
     Calculate comprehensive ELO change including tier and division changes
@@ -213,7 +213,7 @@ def fetch_previous_elo(db_connection: object)-> Tuple[pd.DataFrame, pd.DataFrame
         
         return current_solo, current_flex, previous_solo, previous_flex
 
-def track_elo_changes()-> List[Dict[str, Any]]:
+def track_elo_changes()-> List[Dict[str, any]]:
     puuid_df = fetch_puuid(engine)
     if puuid_df.empty:
         print("No PUUID data found.")
