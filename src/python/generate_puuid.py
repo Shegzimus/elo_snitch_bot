@@ -19,7 +19,7 @@ def fetch_player_data(db_connection: object) -> pd.DataFrame:
             index_col='id')
         return df
 
-
+# REF: https://developer.riotgames.com/apis#account-v1/GET_getByRiotId
 def get_puuid() -> dict:
     id_puuid_map = {}  # Dictionary to store id and puuid mapping
     api_key = os.getenv("riot_api_key")
