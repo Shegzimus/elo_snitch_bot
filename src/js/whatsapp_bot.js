@@ -2,11 +2,13 @@ const { Client } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const fs = require('fs');
 const dotenv = require('dotenv');
+const path = require('path');
+const envPath = path.resolve(__dirname, '../../config/.env');
 
-dotenv.config();
+dotenv.config({ path: envPath });
 
 // Test message
-const testMessage = "*TEST MESSAGE FROM ELO SNITCH BOT*\n\nThis is a test message to verify the WhatsApp bot is working correctly.";
+const testMessage = "*ELO SNITCH BOT ONLINE*\n\nI'm ready to help you track ELO changes and snitch on these hoes! Available commands:\n\n!topelo - Shows top 5 ELO changes\n!fullelo - Shows full ELO changes list\n\nType any command to get started!";
 
 // Initialize the client with session configuration
 const client = new Client({
@@ -27,16 +29,51 @@ client.on('ready', () => {
     console.log('Bot is now active and monitoring messages...');
     
     // Add a small delay before sending the test message
-    setTimeout(() => {
-        // Send the test message to the group
-        client.sendMessage(process.env.WHATSAPP_GROUP_ID, testMessage)
-            .then(() => {
-                console.log('Message sent successfully!');
-            })
-            .catch(err => {
-                console.error('Error sending message:', err);
-            });
-    }, 4000); // 4 second delay
+    setTimeout(async () => {
+        try {
+            const groupId = process.env.WHATSAPP_GROUP_ID;
+            if (!groupId) {
+                console.error('WhatsApp group ID not configured in .env file');
+                return;
+            }
+
+            // Check if client is fully connected
+            const isConnected = await client.isConnected();
+            if (!isConnected) {
+                console.error('Client is not fully connected yet');
+                return;
+            }
+
+            // Attempt to send message with retries
+            let retries = 3;
+            while (retries > 0) {
+                try {
+                    const chat = await client.getChatById(groupId);
+                    if (!chat) {
+                        console.error('Could not find chat with ID:', groupId);
+                        return;
+                    }
+
+                    await chat.sendMessage(testMessage);
+                    console.log('Message sent successfully!');
+                    break;
+                } catch (err) {
+                    console.error(`Attempt ${4 - retries}: Error sending message:`, err);
+                    if (retries > 1) {
+                        console.log(`Retrying in 2 seconds...`);
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                    }
+                    retries--;
+                }
+            }
+
+            if (retries === 0) {
+                console.error('Failed to send message after 3 attempts');
+            }
+        } catch (error) {
+            console.error('Unexpected error:', error);
+        }
+    }, 8000); // Increased delay to 8 seconds to ensure full connection
 });
 
 // Handle disconnection
@@ -175,5 +212,13 @@ client.on('message', async message => {
     }
 });
 
-// Initialize
+
+
+
+
+
+
+
+
+
 client.initialize();
