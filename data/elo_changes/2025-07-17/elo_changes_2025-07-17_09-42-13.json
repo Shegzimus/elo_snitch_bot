@@ -1,0 +1,151 @@
+{
+  "message": "*ELO CHANGES UPDATE*\n\n\n*TOP 5 CHANGES:*\n\u2022 #1 (Player marvyiscool): BRONZE III (11 LP) -76 LP - Division III -> IV\n\u2022 #2 (Player TK HYDRA): BRONZE IV (10 LP) -56 LP - PROMOTED from IRON to BRONZE\n\u2022 #3 (Player Rahzzcal): GOLD IV (22 LP) -53 LP - PROMOTED from SILVER to GOLD\n\u2022 #4 (Player HNG Alfred): GOLD IV (72 LP) +47 LP\n\u2022 #5 (Player OTPStormbringer): SILVER I (50 LP) +47 LP\n\n*FULL CHANGES:*\n\u2022 Solo/Duo Queue:\n  Player: TK SavageMummy\n  Rank: GOLD III\n  LP: 45 (+19 LP)\n\n  Player: SLY LOKi\n  Rank: SILVER IV\n  LP: 64 (+26 LP)\n\n  Player: TK HYDRA\n  Rank: BRONZE IV\n  LP: 10 (-56 LP - PROMOTED from IRON to BRONZE)\n\n  Player: KT PapaChiibs \n  Rank: BRONZE III\n  LP: 16 (-4 LP)\n\n  Player: HNG Alfred\n  Rank: GOLD IV\n  LP: 72 (+47 LP)\n\n  Player: DLR JOSH\n  Rank: BRONZE I\n  LP: 22 (+1 LP)\n\n  Player: OTPStormbringer\n  Rank: SILVER I\n  LP: 50 (+47 LP)\n\n  Player: Jueviol\n  Rank: BRONZE IV\n  LP: 37 (+37 LP)\n\n  Player: Monteng\n  Rank: PLATINUM III\n  LP: 46 (+24 LP - Division II -> III)\n\n  Player: marvyiscool\n  Rank: BRONZE III\n  LP: 11 (-76 LP - Division III -> IV)\n\n  Player: Nigerian Lotus\n  Rank: BRONZE III\n  LP: 8 (-31 LP - Division III -> IV)\n\n  Player: Rahzzcal\n  Rank: GOLD IV\n  LP: 22 (-53 LP - PROMOTED from SILVER to GOLD)\n\n  Player: DheAbyss\n  Rank: SILVER II\n  LP: 60 (+27 LP)\n\n\u2022 Flex Queue:\n  Player: Monteng\n  Rank: PLATINUM III\n  LP: 97 (+27 LP)\n\n",
+  "timestamp": "2025-07-17_09-42-13",
+  "changes": [
+    {
+      "summ_id": "TK SavageMummy",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD III",
+      "lp": 45,
+      "change": "+19 LP"
+    },
+    {
+      "summ_id": "SLY LOKi",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER IV",
+      "lp": 64,
+      "change": "+26 LP"
+    },
+    {
+      "summ_id": "TK HYDRA",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE IV",
+      "lp": 10,
+      "change": "-56 LP - PROMOTED from IRON to BRONZE"
+    },
+    {
+      "summ_id": "KT PapaChiibs ",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE III",
+      "lp": 16,
+      "change": "-4 LP"
+    },
+    {
+      "summ_id": "HNG Alfred",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 72,
+      "change": "+47 LP"
+    },
+    {
+      "summ_id": "DLR JOSH",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE I",
+      "lp": 22,
+      "change": "+1 LP"
+    },
+    {
+      "summ_id": "OTPStormbringer",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER I",
+      "lp": 50,
+      "change": "+47 LP"
+    },
+    {
+      "summ_id": "Jueviol",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE IV",
+      "lp": 37,
+      "change": "+37 LP"
+    },
+    {
+      "summ_id": "Monteng",
+      "queue": "Solo/Duo Queue",
+      "tier": "PLATINUM III",
+      "lp": 46,
+      "change": "+24 LP - Division II -> III"
+    },
+    {
+      "summ_id": "Monteng",
+      "queue": "Flex Queue",
+      "tier": "PLATINUM III",
+      "lp": 97,
+      "change": "+27 LP"
+    },
+    {
+      "summ_id": "marvyiscool",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE III",
+      "lp": 11,
+      "change": "-76 LP - Division III -> IV"
+    },
+    {
+      "summ_id": "Nigerian Lotus",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE III",
+      "lp": 8,
+      "change": "-31 LP - Division III -> IV"
+    },
+    {
+      "summ_id": "Rahzzcal",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 22,
+      "change": "-53 LP - PROMOTED from SILVER to GOLD"
+    },
+    {
+      "summ_id": "DheAbyss",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER II",
+      "lp": 60,
+      "change": "+27 LP"
+    }
+  ],
+  "top_changes": [
+    {
+      "rank": 1,
+      "summ_id": "marvyiscool",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE III",
+      "lp": 11,
+      "change": "-76 LP - Division III -> IV",
+      "absolute_change": 76
+    },
+    {
+      "rank": 2,
+      "summ_id": "TK HYDRA",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE IV",
+      "lp": 10,
+      "change": "-56 LP - PROMOTED from IRON to BRONZE",
+      "absolute_change": 56
+    },
+    {
+      "rank": 3,
+      "summ_id": "Rahzzcal",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 22,
+      "change": "-53 LP - PROMOTED from SILVER to GOLD",
+      "absolute_change": 53
+    },
+    {
+      "rank": 4,
+      "summ_id": "HNG Alfred",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 72,
+      "change": "+47 LP",
+      "absolute_change": 47
+    },
+    {
+      "rank": 5,
+      "summ_id": "OTPStormbringer",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER I",
+      "lp": 50,
+      "change": "+47 LP",
+      "absolute_change": 47
+    }
+  ]
+}
