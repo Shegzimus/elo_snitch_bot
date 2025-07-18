@@ -1,16 +1,11 @@
 import os
-import socket
-import ssl
-import json
-import urllib.parse
-import httplib2
 from dotenv import load_dotenv
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 import pandas as pd
 from sqlalchemy import create_engine
 
-# Define the path to the .env file
+# Define the path to the .env file from the project root directory
 env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "config", ".env"))
 
 # Check if .env file exists
@@ -24,9 +19,9 @@ load_dotenv(dotenv_path=env_path, override=True)
 # print("Environment variables:", os.environ)
 # print(f"Google Sheet ID from .env: {os.getenv('google_sheet_id')}")
 
-engine:object = create_engine("postgresql://root:root@localhost:5432/snitch_bot_db") # will only work if the docker DB container is running
+engine:object = create_engine("postgresql://root:root@localhost:5432/snitch_bot_db") # will only work if the Postgres DB container is running
 
-def test_network_connectivity():
+def test_network_connectivity()-> None:
     """Test if we can reach Google's servers with proper SSL context"""
     import socket
     import ssl
@@ -48,25 +43,25 @@ def test_network_connectivity():
             
             # Test TCP connection
             with socket.create_connection((host, port), timeout=10) as sock:
-                print(f"✓ TCP connection to {host}:{port} successful")
+                print(f"TCP connection to {host}:{port} successful")
                 
                 # Test SSL handshake
                 with context.wrap_socket(sock, server_hostname=host) as ssock:
-                    print(f"✓ SSL handshake successful. Protocol: {ssock.version()}")
+                    print(f"SSL handshake successful. Protocol: {ssock.version()}")
                     
                     # Test HTTP request
                     request = f"GET {path} HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n"
                     ssock.sendall(request.encode())
                     response = ssock.recv(4096).decode()
                     status_line = response.split('\r\n')[0]
-                    print(f'✓ HTTP request successful. Status: {status_line}')
+                    print(f"HTTP request successful. Status: {status_line}")
                     
         except Exception as e:
-            print(f"✗ Error connecting to {host}:{port}: {str(e)}")
+            print(f"Error connecting to {host}:{port}: {str(e)}")
             import traceback
             traceback.print_exc()
 
-def create_google_sheets_service(credentials_path: str):
+def create_google_sheets_service(credentials_path: str)-> object:
     """Create and return an authorized Google Sheets API service instance."""
     try:
         # Get the absolute path to the credentials file
