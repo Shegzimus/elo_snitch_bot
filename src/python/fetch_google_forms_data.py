@@ -1,5 +1,9 @@
-import requests
 import os
+import socket
+import ssl
+import json
+import urllib.parse
+import httplib2
 from dotenv import load_dotenv
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
@@ -22,10 +26,73 @@ load_dotenv(dotenv_path=env_path, override=True)
 
 engine:object = create_engine("postgresql://root:root@localhost:5432/snitch_bot_db") # will only work if the docker DB container is running
 
+def test_network_connectivity():
+    """Test if we can reach Google's servers with proper SSL context"""
+    import socket
+    import ssl
+    
+    test_hosts = [
+        ('accounts.google.com', 443, '/.well-known/openid-configuration'),
+        ('sheets.googleapis.com', 443, '/$discovery/rest?version=v4'),
+        ('www.google.com', 443, '/')
+    ]
+    
+    for host, port, path in test_hosts:
+        try:
+            print(f"\nTesting connection to {host}:{port}...")
+            
+            # Create SSL context with modern settings
+            context = ssl.create_default_context()
+            context.check_hostname = True
+            context.verify_mode = ssl.CERT_REQUIRED
+            
+            # Test TCP connection
+            with socket.create_connection((host, port), timeout=10) as sock:
+                print(f"✓ TCP connection to {host}:{port} successful")
+                
+                # Test SSL handshake
+                with context.wrap_socket(sock, server_hostname=host) as ssock:
+                    print(f"✓ SSL handshake successful. Protocol: {ssock.version()}")
+                    
+                    # Test HTTP request
+                    request = f"GET {path} HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n"
+                    ssock.sendall(request.encode())
+                    response = ssock.recv(4096).decode()
+                    status_line = response.split('\r\n')[0]
+                    print(f'✓ HTTP request successful. Status: {status_line}')
+                    
+        except Exception as e:
+            print(f"✗ Error connecting to {host}:{port}: {str(e)}")
+            import traceback
+            traceback.print_exc()
+
+def create_google_sheets_service(credentials_path: str):
+    """Create and return an authorized Google Sheets API service instance."""
+    try:
+        # Get the absolute path to the credentials file
+        credentials_path = os.path.abspath(credentials_path)
+        print(f"Using credentials from: {credentials_path}")
+        
+        # Load the service account credentials
+        creds = service_account.Credentials.from_service_account_file(
+            credentials_path,
+            scopes=['https://www.googleapis.com/auth/spreadsheets.readonly']
+        )
+        
+        # Build the service
+        service = build('sheets', 'v4', credentials=creds, 
+                       cache_discovery=False,  # Avoids an unnecessary request
+                       static_discovery=False)  # Uses the discovery document from the package
+        
+        return service
+    except Exception as e:
+        print(f"Error creating Google Sheets service: {str(e)}")
+        raise
+
 def fetch_google_sheet_data(
-        range_name:str="Form Responses 1!A:D", 
-        credentials_path:str=None
-        )-> pd.DataFrame:
+        range_name: str = "Form Responses 1!A:D", 
+        credentials_path: str = None
+    ) -> pd.DataFrame:
     
     sheet_id:str = os.getenv("google_sheet_id")
     
@@ -52,10 +119,10 @@ def fetch_google_sheet_data(
         )
 
     # Define the required scope
-    SCOPES:list[str] = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+    SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
     # Load credentials from the service account file
-    creds:object = service_account.Credentials.from_service_account_file(
+    creds = service_account.Credentials.from_service_account_file(
         credentials_path, scopes=SCOPES)
 
     # Build the Sheets API service
@@ -108,4 +175,19 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        # Test network connectivity first
+        test_network_connectivity()
+        
+        # Then run the main function
+        main()
+    except Exception as e:
+        print(f"\n❌ An error occurred: {str(e)}")
+        print("\nTroubleshooting steps:")
+        print("1. Verify your internet connection")
+        print("2. Check if the Google Sheet ID is correct and shared with the service account")
+        print("3. Ensure the Google Sheets API is enabled in your Google Cloud project")
+        print("4. Verify the service account has the correct permissions")
+        print("5. Check if your system time is synchronized")
+        print("\nFor more detailed error information, check the full traceback above.")
+        raise
