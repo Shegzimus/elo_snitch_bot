@@ -1,0 +1,144 @@
+{
+  "message": "*ELO CHANGES UPDATE*\n\n\n*TOP 5 CHANGES:*\n\u2022 #1 (Player Monteng): PLATINUM IV (98 LP) +52 LP - Division III -> IV\n\u2022 #2 (Player Monteng): PLATINUM II (55 LP) -42 LP - Division II -> III\n\u2022 #3 (Player Versatile): GOLD IV (0 LP) -38 LP\n\u2022 #4 (Player Jueviol): BRONZE IV (0 LP) -37 LP\n\u2022 #5 (Player DC Nalphstein): BRONZE IV (32 LP) +29 LP - Division III -> IV\n\n*FULL CHANGES:*\n\u2022 Solo/Duo Queue:\n  Player: DC Nalphstein\n  Rank: BRONZE IV\n  LP: 32 (+29 LP - Division III -> IV)\n\n  Player: TK HYDRA\n  Rank: BRONZE IV\n  LP: 29 (+19 LP)\n\n  Player: Versatile\n  Rank: GOLD IV\n  LP: 0 (-38 LP)\n\n  Player: KT PapaChiibs \n  Rank: BRONZE II\n  LP: 10 (-6 LP - Division II -> III)\n\n  Player: DLR JOSH\n  Rank: BRONZE I\n  LP: 20 (-2 LP)\n\n  Player: OTPStormbringer\n  Rank: GOLD IV\n  LP: 22 (-28 LP - PROMOTED from SILVER to GOLD)\n\n  Player: Jueviol\n  Rank: BRONZE IV\n  LP: 0 (-37 LP)\n\n  Player: Monteng\n  Rank: PLATINUM IV\n  LP: 98 (+52 LP - Division III -> IV)\n\n  Player: LNK GuyNow\n  Rank: SILVER IV\n  LP: 68 (-26 LP)\n\n  Player: Rahzzcal\n  Rank: SILVER I\n  LP: 47 (+25 LP - DEMOTED from GOLD to SILVER)\n\n  Player: DheAbyss\n  Rank: SILVER II\n  LP: 85 (+25 LP)\n\n  Player: Khanedi \n  Rank: SILVER III\n  LP: 23 (+8 LP - Division II -> III)\n\n\u2022 Flex Queue:\n  Player: Monteng\n  Rank: PLATINUM II\n  LP: 55 (-42 LP - Division II -> III)\n\n",
+  "timestamp": "2025-07-18_21-32-54",
+  "changes": [
+    {
+      "summ_id": "DC Nalphstein",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE IV",
+      "lp": 32,
+      "change": "+29 LP - Division III -> IV"
+    },
+    {
+      "summ_id": "TK HYDRA",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE IV",
+      "lp": 29,
+      "change": "+19 LP"
+    },
+    {
+      "summ_id": "Versatile",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 0,
+      "change": "-38 LP"
+    },
+    {
+      "summ_id": "KT PapaChiibs ",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE II",
+      "lp": 10,
+      "change": "-6 LP - Division II -> III"
+    },
+    {
+      "summ_id": "DLR JOSH",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE I",
+      "lp": 20,
+      "change": "-2 LP"
+    },
+    {
+      "summ_id": "OTPStormbringer",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 22,
+      "change": "-28 LP - PROMOTED from SILVER to GOLD"
+    },
+    {
+      "summ_id": "Jueviol",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE IV",
+      "lp": 0,
+      "change": "-37 LP"
+    },
+    {
+      "summ_id": "Monteng",
+      "queue": "Solo/Duo Queue",
+      "tier": "PLATINUM IV",
+      "lp": 98,
+      "change": "+52 LP - Division III -> IV"
+    },
+    {
+      "summ_id": "Monteng",
+      "queue": "Flex Queue",
+      "tier": "PLATINUM II",
+      "lp": 55,
+      "change": "-42 LP - Division II -> III"
+    },
+    {
+      "summ_id": "LNK GuyNow",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER IV",
+      "lp": 68,
+      "change": "-26 LP"
+    },
+    {
+      "summ_id": "Rahzzcal",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER I",
+      "lp": 47,
+      "change": "+25 LP - DEMOTED from GOLD to SILVER"
+    },
+    {
+      "summ_id": "DheAbyss",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER II",
+      "lp": 85,
+      "change": "+25 LP"
+    },
+    {
+      "summ_id": "Khanedi ",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER III",
+      "lp": 23,
+      "change": "+8 LP - Division II -> III"
+    }
+  ],
+  "top_changes": [
+    {
+      "rank": 1,
+      "summ_id": "Monteng",
+      "queue": "Solo/Duo Queue",
+      "tier": "PLATINUM IV",
+      "lp": 98,
+      "change": "+52 LP - Division III -> IV",
+      "absolute_change": 52
+    },
+    {
+      "rank": 2,
+      "summ_id": "Monteng",
+      "queue": "Flex Queue",
+      "tier": "PLATINUM II",
+      "lp": 55,
+      "change": "-42 LP - Division II -> III",
+      "absolute_change": 42
+    },
+    {
+      "rank": 3,
+      "summ_id": "Versatile",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 0,
+      "change": "-38 LP",
+      "absolute_change": 38
+    },
+    {
+      "rank": 4,
+      "summ_id": "Jueviol",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE IV",
+      "lp": 0,
+      "change": "-37 LP",
+      "absolute_change": 37
+    },
+    {
+      "rank": 5,
+      "summ_id": "DC Nalphstein",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE IV",
+      "lp": 32,
+      "change": "+29 LP - Division III -> IV",
+      "absolute_change": 29
+    }
+  ]
+}
