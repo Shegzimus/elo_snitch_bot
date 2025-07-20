@@ -288,34 +288,110 @@ def track_elo_changes()-> List[Dict[str, any]]:
     
     return changes
 
-# def get_player_progression(
-#     player_id: int, 
-#     queue_type: str, 
-#     days: int=30
-#     )-> pd.DataFrame:
 
-#     """Get ELO progression for a player over time"""
-#     query = """
-#     SELECT 
-#         timestamp,
-#         tier,
-#         rank,
-#         league_points,
-#         wins,
-#         losses
-#     FROM elo_history
-#     WHERE player_id = :player_id
-#     AND queue_type = :queue_type
-#     AND timestamp >= NOW() - INTERVAL :days days
-#     ORDER BY timestamp ASC
-#     """
-#     return pd.read_sql(query, engine, params={
-#         'player_id': player_id,
-#         'queue_type': queue_type,
-#         'days': days
-#     })
+def fetch_winrate()-> Tuple[List[Dict[str, any]], List[Dict[str, any]]]:
+    wr_solo = []
+    wr_flex = []
+    with engine.connect() as connection:
+        query:str = f"""
+        WITH latest_scans AS (
+            SELECT 
+                fr.summ_id,
+                eh.queue_type,
+                eh.tier,
+                eh.rank,
+                eh.league_points,
+                eh.wins,
+                eh.losses,
+                eh.timestamp,
+                ROW_NUMBER() OVER (
+                    PARTITION BY fr.summ_id, eh.queue_type 
+                    ORDER BY eh.timestamp DESC
+                ) AS scan_number
+            FROM public.elo_history eh
+            JOIN public.form_responses fr 
+                ON eh.player_id = fr.index
+        ),
+        filtered_scans AS (
+            SELECT *
+            FROM latest_scans
+            WHERE scan_number = 1
+        )
+        SELECT 
+            summ_id,
+            queue_type,
+            tier,
+            rank,
+            league_points as lp,
+            wins,
+            losses,
+            (wins + losses) AS total_games,
+            ROUND(((wins::numeric / NULLIF(wins + losses, 0)) * 100)::numeric, 2) AS win_rate,
+            timestamp
+        FROM filtered_scans
+        WHERE queue_type = 'RANKED_SOLO_5x5'
+        ORDER BY win_rate DESC;
+"""
+        df: pd.DataFrame = pd.read_sql(query, connection)
 
-def format_whatsapp_message(changes:list)-> str:
+        for _, row in df.iterrows():
+            if row['queue_type'] == 'RANKED_SOLO_5x5':
+                wr_solo.append({
+                "summ_id": str(row['summ_id']),
+                "tier": str(row['tier']),
+                "rank": str(row['rank']),
+                "wins": int(row['wins']),
+                "losses": int(row['losses']),
+                "total_games": int(row['total_games']),
+                "win_rate": float(row['win_rate'])
+            })
+            else:
+                wr_flex.append({
+                "summ_id": str(row['summ_id']),
+                "tier": str(row['tier']),
+                "rank": str(row['rank']),
+                "wins": int(row['wins']),
+                "losses": int(row['losses']),
+                "total_games": int(row['total_games']),
+                "win_rate": float(row['win_rate'])
+            })
+        return wr_solo, wr_flex
+
+
+
+def format_winrate_message(winrate_data: List[Dict[str, any]], queue_type: str = "Solo/Duo") -> str:
+    """
+    Format win rate data for WhatsApp messages.
+    
+    Args:
+        winrate_data: List of dictionaries containing win rate information
+        queue_type: Type of queue (e.g., "Solo/Duo" or "Flex")
+        
+    Returns:
+        Formatted message string
+    """
+    if not winrate_data:
+        return f"*{queue_type} Queue Win Rates:*\nNo win rate data available.\n"
+    
+    # Sort alphabetically by summoner name
+    winrate_data.sort(key=lambda x: x['summ_id'].lower())
+    
+    message = f"*{queue_type} Queue Win Rates:*\n"
+    
+    for player in winrate_data:
+        # Format tier and rank (e.g., "GOLD I" or "MASTER")
+        tier_rank = f"{player['tier']} {player['rank']}" if player['rank'] else player['tier']
+        
+        # Format win rate and record (e.g., "60.0% | 12W-8L")
+        win_rate = f"{player['win_rate']}%"
+        record = f"{player['wins']}W-{player['losses']}L"
+        
+        message += f"{player['summ_id']} - {tier_rank} ({win_rate} | {record})\n"
+    
+    return message
+
+
+def format_elo_changes_message(changes: list) -> str:
     message = MESSAGE_HEADER
     
     # Add top 5 changes section
