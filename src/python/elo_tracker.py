@@ -220,10 +220,10 @@ def fetch_previous_elo(db_connection: object)-> Tuple[pd.DataFrame, pd.DataFrame
         previous_df = df[df['scan_number'] == 2]
         
         # Separate by queue type
-        current_solo = current_df[current_df['queue_type'] == 'RANKED_SOLO_5x5']
-        current_flex = current_df[current_df['queue_type'] == 'RANKED_FLEX_SR']
-        previous_solo = previous_df[previous_df['queue_type'] == 'RANKED_SOLO_5x5']
-        previous_flex = previous_df[previous_df['queue_type'] == 'RANKED_FLEX_SR']
+        current_solo: pd.DataFrame = current_df[current_df['queue_type'] == 'RANKED_SOLO_5x5']
+        current_flex: pd.DataFrame = current_df[current_df['queue_type'] == 'RANKED_FLEX_SR']
+        previous_solo: pd.DataFrame = previous_df[previous_df['queue_type'] == 'RANKED_SOLO_5x5']
+        previous_flex: pd.DataFrame = previous_df[previous_df['queue_type'] == 'RANKED_FLEX_SR']
         
         return current_solo, current_flex, previous_solo, previous_flex
 
