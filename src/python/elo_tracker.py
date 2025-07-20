@@ -44,10 +44,10 @@ def get_current_date_time()-> Tuple[str, str]:
     timestamp = now.strftime("%Y-%m-%d_%H-%M-%S")
     return date_str, timestamp
 
-def create_daily_directory()-> Tuple[str, str]:
+def create_daily_directory(folder: str)-> Tuple[str, str]:
     project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
     date_str = datetime.now().strftime("%Y-%m-%d")
-    data_dir = os.path.join(project_root, "data", "elo_changes")
+    data_dir = os.path.join(project_root, "data", folder)
     daily_dir = os.path.join(data_dir, date_str)
     os.makedirs(daily_dir, exist_ok=True)
     return data_dir, daily_dir
@@ -394,77 +394,95 @@ def format_winrate_message(winrate_data: List[Dict[str, any]], queue_type: str =
 def format_elo_changes_message(changes: list) -> str:
     message = MESSAGE_HEADER
     
-    # Add top 5 changes section
-    top_changes = get_top_changes(changes, 5)
-    if top_changes:
-        message += "\n*TOP 5 CHANGES:*\n"
-        for change in top_changes:
-            message += f"\u2022 #{change['rank']} (Player {change['summ_id']}): {change['tier']} ({change['lp']} LP) {change['change']}\n"
-        message += "\n"
-    
-    # Add full changes section
-    message += "*FULL CHANGES:*\n"
-    
-    # Group changes by queue
-    queue_changes = {}
+    # Group changes by queue type
+    queue_groups = {}
     for change in changes:
         queue = change['queue']
-        if queue not in queue_changes:
-            queue_changes[queue] = []
-        queue_changes[queue].append(change)
+        if queue not in queue_groups:
+            queue_groups[queue] = []
+        queue_groups[queue].append(change)
     
-    # Format each queue's changes
-    for queue, changes in queue_changes.items():
-        message += f"\u2022 {queue}:\n"
-        for change in changes:
-            message += f"  Player: {change['summ_id']}\n"
-            message += f"  Rank: {change['tier']}\n"
-            message += f"  LP: {change['lp']} ({change['change']})\n\n"
+    # Format each queue group
+    for queue, queue_changes in queue_groups.items():
+        # Get the display name from QUEUE_TYPES, or use the queue value directly if not found
+        queue_display = QUEUE_TYPES.get(queue, queue)
+        message += f"*{queue_display}:*\n"
+        
+        # Sort changes by tier and division
+        queue_changes.sort(
+            key=lambda x: (
+                get_tier_index(x['tier'].split()[0]),
+                get_division_index(x['tier'].split()[1]) if len(x['tier'].split()) > 1 else 0,
+                -x['lp']
+            )
+        )
+        
+        for change in queue_changes:
+            message += (
+                f"{change['summ_id']} - {change['tier']} ({change['lp']} LP) "
+                f"{change['change']}\n"
+            )
+        message += "\n"
     
-    return message
+    return message.strip()
+
+def convert_to_python_types(data: List[Dict[str, any]], is_top_changes: bool = False) -> List[Dict[str, any]]:
+    """
+    Convert pandas/numpy types to native Python types
+    
+    Args:
+        data: List of dictionaries containing change data
+        is_top_changes: Whether the data is for top changes (includes additional fields)
+        
+    Returns:
+        List of dictionaries with converted types
+    """
+    result: list = []
+    for item in data:
+        if is_top_changes:
+            converted = {
+                "rank": int(item["rank"]),
+                "summ_id": str(item["summ_id"]),
+                "queue": item["queue"],
+                "tier": item["tier"],
+                "lp": int(item["lp"]),
+                "change": item["change"],
+                "absolute_change": int(item["absolute_change"])
+            }
+        else:
+            converted = {
+                "summ_id": str(item["summ_id"]),
+                "queue": item["queue"],
+                "tier": item["tier"],
+                "lp": int(item["lp"]),
+                "change": item["change"]
+            }
+        result.append(converted)
+    return result
 
 def main()->None:
     # Track ELO changes
     changes = track_elo_changes()
+
+    # Track winrate
+    wr_solo, wr_flex = fetch_winrate()
     
     if changes:
         # Format message for WhatsApp bot
-        message = format_whatsapp_message(changes)
+        message = format_elo_changes_message(changes)
         
         # Convert pandas types to Python types
-        python_changes = []
-        for change in changes:
-            python_change = {
-                "summ_id": str(change["summ_id"]),
-                "queue": change["queue"],
-                "tier": change["tier"],
-                "lp": int(change["lp"]),
-                "change": change["change"]
-            }
-            python_changes.append(python_change)
+        python_changes = convert_to_python_types(changes)
         
-        # Calculate top changes
+        # Calculate and convert top changes
         top_changes = get_top_changes(changes, 5)
-        
-        # Convert top changes to Python types
-        python_top_changes = []
-        for change in top_changes:
-            python_top_change = {
-                "rank": int(change["rank"]),
-                "summ_id": str(change["summ_id"]),
-                "queue": change["queue"],
-                "tier": change["tier"],
-                "lp": int(change["lp"]),
-                "change": change["change"],
-                "absolute_change": int(change["absolute_change"])
-            }
-            python_top_changes.append(python_top_change)
+        python_top_changes = convert_to_python_types(top_changes, is_top_changes=True)
         
         # Get current date and time
         date_str, timestamp = get_current_date_time()
     
         # Create daily directory if it doesn't exist
-        data_dir, daily_dir = create_daily_directory()
+        data_dir, daily_dir = create_daily_directory("elo_changes")
         # Create a symlink to the latest file
         latest_path = os.path.join(data_dir, "latest.json")
         
@@ -492,6 +510,61 @@ def main()->None:
         print(f"Latest symlink updated to point to {filename}")
     else:
         print("No ELO changes detected.")
+
+    if wr_solo:
+        message = format_winrate_message(wr_solo, queue_type="Solo/Duo")
+        _, timestamp = get_current_date_time()
+        data_dir, daily_dir = create_daily_directory("winrate/solo")
+        latest_path = os.path.join(data_dir, "latest.json")
+        filename = f"winrate_solo_{timestamp}.json"
+        file_path = os.path.join(daily_dir, filename)
+        
+        with open(file_path, 'w') as f:
+            json.dump({
+                "message": message,
+                "timestamp": timestamp,
+                "changes": wr_solo
+            }, f, indent=2)
+        
+        try:
+            if os.path.exists(latest_path):
+                os.remove(latest_path)
+            os.symlink(os.path.abspath(file_path), latest_path)
+        except Exception as e:
+            print(f"Warning: Could not create/update latest symlink: {e}")
+        
+        print(f"Winrate tracked and saved. Message saved to {file_path}")
+        print(f"Latest symlink updated to point to {filename}")
+    else:
+        print("No solo/duo winrate data available.")
+
+    if wr_flex:
+        message = format_winrate_message(wr_flex, queue_type="Flex")
+        _, timestamp = get_current_date_time()
+        data_dir, daily_dir = create_daily_directory("winrate/flex")
+        latest_path = os.path.join(data_dir, "latest.json")
+        
+        filename = f"winrate_flex_{timestamp}.json"
+        file_path = os.path.join(daily_dir, filename)
+        
+        with open(file_path, 'w') as f:
+            json.dump({
+                "message": message,
+                "timestamp": timestamp,
+                "changes": wr_flex
+            }, f, indent=2)
+        
+        try:
+            if os.path.exists(latest_path):
+                os.remove(latest_path)
+            os.symlink(os.path.abspath(file_path), latest_path)
+        except Exception as e:
+            print(f"Warning: Could not create/update latest symlink: {e}")
+        
+        print(f"Winrate tracked and saved. Message saved to {file_path}")
+        print(f"Latest symlink updated to point to {filename}")
+    else:
+        print("No flex winrate data available.")
 
 if __name__ == "__main__":
     main()
