@@ -119,6 +119,90 @@ function getLatestEloFile() {
     return `${latestFolderPath}/${latestFile}`;
 }
 
+// Function to get the latest winrate file
+function getLatestWinrateFile() {
+    const winrateDir = '../../data/winrate/solo';
+    
+    // Get all date folders
+    const folders = fs.readdirSync(winrateDir)
+        .filter(item => {
+            const fullPath = path.join(winrateDir, item);
+            return fs.statSync(fullPath).isDirectory();
+        });
+    
+    if (folders.length === 0) {
+        console.error('No date folders found in winrate directory');
+        return null;
+    }
+    
+    // Get the latest folder (sorted by date)
+    const latestFolder = folders.sort().pop();
+    const latestFolderPath = path.join(winrateDir, latestFolder);
+    
+    // Get all JSON files in the latest folder
+    const files = fs.readdirSync(latestFolderPath)
+        .filter(file => file.endsWith('.json') && file.startsWith('winrate_solo'));
+    
+    if (files.length === 0) {
+        console.error('No winrate JSON files found in', latestFolderPath);
+        return null;
+    }
+    
+    // Get the latest file (sorted by timestamp)
+    const latestFile = files.sort().pop();
+    return path.join(latestFolderPath, latestFile);
+}
+
+// Function to format winrate data
+function formatWinrate(data) {
+    if (!data.changes || data.changes.length === 0) {
+        return "No winrate data available!";
+    }
+
+    // Sort by win rate descending, then by total games descending
+    const sortedData = [...data.changes].sort((a, b) => {
+        if (b.win_rate !== a.win_rate) {
+            return b.win_rate - a.win_rate; // Higher win rate first
+        }
+        return (b.wins + b.losses) - (a.wins + a.losses); // More games first if win rates are equal
+    });
+
+    let message = "*SOLO/DUO QUEUE WIN RATES*\n\n";
+    
+    // Add top 10 players by win rate
+    message += "*Top 10 Players by Win Rate:*\n";
+    sortedData.slice(0, 10).forEach((player, index) => {
+        message += `${index + 1}. ${player.summ_id} - ${player.tier} ${player.rank} (${player.win_rate}% | ${player.wins}W-${player.losses}L)\n`;
+    });
+    
+    // Add players with most games
+    const mostGames = [...data.changes].sort((a, b) => 
+        (b.wins + b.losses) - (a.wins + a.losses)
+    ).slice(0, 5);
+    
+    message += "\n*Most Active Players:*\n";
+    mostGames.forEach((player, index) => {
+        message += `${index + 1}. ${player.summ_id} - ${player.wins + player.losses} games (${player.win_rate}%)\n`;
+    });
+    
+    // Add summary stats
+    const totalGames = data.changes.reduce((sum, p) => sum + p.wins + p.losses, 0);
+    const avgWinRate = data.changes.reduce((sum, p) => sum + p.win_rate, 0) / data.changes.length;
+    
+    message += `\n*Stats Summary:*\n`;
+    message += `Total Players: ${data.changes.length}\n`;
+    message += `Total Games Tracked: ${totalGames}\n`;
+    message += `Average Win Rate: ${avgWinRate.toFixed(2)}%\n`;
+    
+    // Add timestamp if available
+    if (data.timestamp) {
+        const formattedTime = data.timestamp.replace('_', ' ').replace(/-/g, '/');
+        message += `\n_Last updated: ${formattedTime}_`;
+    }
+    
+    return message;
+}
+
 // Function to format ELO changes data
 function formatTopChanges(data) {
     if (!data.top_changes || data.top_changes.length === 0) {
@@ -208,6 +292,24 @@ client.on('message', async message => {
         } catch (error) {
             console.error('Error processing ELO data:', error);
             await message.reply('Error processing ELO data. Please try again later.');
+        }
+    }
+
+    // Handle !winrate command - shows winrate
+    else if (message.body.toLowerCase() === '!winrate') {
+        const latestFile = getLatestWinrateFile();
+        if (!latestFile) {
+            await message.reply('No winrate data available!');
+            return;
+        }
+
+        try {
+            const data = JSON.parse(fs.readFileSync(latestFile, 'utf8'));
+            const formattedMessage = formatWinrate(data);
+            await message.reply(formattedMessage);
+        } catch (error) {
+            console.error('Error processing winrate data:', error);
+            await message.reply('Error processing winrate data. Please try again later.');
         }
     }
 });
