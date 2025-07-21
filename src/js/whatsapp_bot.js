@@ -196,7 +196,11 @@ function formatWinrate(data) {
     
     // Add timestamp if available
     if (data.timestamp) {
-        const formattedTime = data.timestamp.replace('_', ' ').replace(/-/g, '/');
+        // Format: Convert "2025-07-20_21-52-54" to "2025/07/20 21:52:54"
+        const [datePart, timePart] = data.timestamp.split('_');
+        const [year, month, day] = datePart.split('-');
+        const [hour, minute, second] = timePart.split('-');
+        const formattedTime = `${year}/${month}/${day} ${hour}:${minute}:${second}`;
         message += `\n_Last updated: ${formattedTime}_`;
     }
     
