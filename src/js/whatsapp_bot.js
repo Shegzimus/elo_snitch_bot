@@ -153,6 +153,17 @@ function getLatestWinrateFile() {
     return path.join(latestFolderPath, latestFile);
 }
 
+// Helper function to format timestamp
+function formatTimestamp(timestamp) {
+    if (!timestamp) return '';
+    
+    // Format: Convert "2025-07-20_21-52-54" to "2025/07/20 21:52:54"
+    const [datePart, timePart] = timestamp.split('_');
+    const [year, month, day] = datePart.split('-');
+    const [hour, minute, second] = timePart.split('-');
+    return `${year}/${month}/${day} ${hour}:${minute}:${second}`;
+}
+
 // Function to format winrate data
 function formatWinrate(data) {
     if (!data.changes || data.changes.length === 0) {
@@ -196,11 +207,7 @@ function formatWinrate(data) {
     
     // Add timestamp if available
     if (data.timestamp) {
-        // Format: Convert "2025-07-20_21-52-54" to "2025/07/20 21:52:54"
-        const [datePart, timePart] = data.timestamp.split('_');
-        const [year, month, day] = datePart.split('-');
-        const [hour, minute, second] = timePart.split('-');
-        const formattedTime = `${year}/${month}/${day} ${hour}:${minute}:${second}`;
+        const formattedTime = formatTimestamp(data.timestamp);
         message += `\n_Last updated: ${formattedTime}_`;
     }
     
@@ -257,6 +264,10 @@ function formatFullChanges(data) {
         message += '\n';
     });
     
+    if (data.timestamp) {
+        message += `\n_Last updated: ${formatTimestamp(data.timestamp)}_`;
+    }
+
     return message;
 }
 
