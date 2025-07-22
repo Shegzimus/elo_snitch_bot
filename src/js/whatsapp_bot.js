@@ -90,7 +90,11 @@ client.on('error', (err) => {
     client.initialize();
 });
 
-// Function to get the latest ELO changes file
+/**
+ * Returns the path to the latest ELO changes JSON file.
+ * If no ELO changes files are found, returns null.
+ * @returns {string|null} The path to the latest ELO changes file
+ */
 function getLatestEloFile() {
     const eloChangesDir = '../../data/elo_changes';
     
@@ -119,7 +123,11 @@ function getLatestEloFile() {
     return `${latestFolderPath}/${latestFile}`;
 }
 
-// Function to get the latest winrate file
+/**
+ * Returns the path to the latest winrate JSON file.
+ * If no winrate files are found, returns null.
+ * @returns {string|null} The path to the latest winrate file
+ */
 function getLatestWinrateFile() {
     const winrateDir = '../../data/winrate/solo';
     
@@ -153,7 +161,11 @@ function getLatestWinrateFile() {
     return path.join(latestFolderPath, latestFile);
 }
 
-// Helper function to format timestamp
+/**
+ * Formats a timestamp string into a more readable format.
+ * @param {string} timestamp - The timestamp string to format
+ * @returns {string} The formatted timestamp string
+ */
 function formatTimestamp(timestamp) {
     if (!timestamp) return '';
     
@@ -164,7 +176,11 @@ function formatTimestamp(timestamp) {
     return `${year}/${month}/${day} ${hour}:${minute}:${second}`;
 }
 
-// Function to format winrate data
+/**
+ * Formats winrate data into a human-readable message.
+ * @param {Object} data - The winrate data to format
+ * @returns {string} The formatted winrate message
+ */
 function formatWinrate(data) {
     if (!data.changes || data.changes.length === 0) {
         return "No winrate data available!";
@@ -214,7 +230,11 @@ function formatWinrate(data) {
     return message;
 }
 
-// Function to format ELO changes data
+/**
+ * Formats ELO changes data into a human-readable message.
+ * @param {Object} data - The ELO changes data to format
+ * @returns {string} The formatted ELO changes message
+ */
 function formatTopChanges(data) {
     if (!data.top_changes || data.top_changes.length === 0) {
         return "No ELO changes available!";
