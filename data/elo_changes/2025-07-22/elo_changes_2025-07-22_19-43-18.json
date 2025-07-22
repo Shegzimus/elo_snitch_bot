@@ -1,0 +1,137 @@
+{
+  "message": "*ELO CHANGES UPDATE*\n\n*Solo/Duo Queue:*\nDLR JOSH - BRONZE I (71 LP) +51 LP\nTK HYDRA - BRONZE IV (24 LP) -29 LP\nDC Nalphstein - BRONZE IV (7 LP) -25 LP\nDheAbyss - SILVER II (29 LP) +4 LP\nJjice222 - SILVER III (76 LP) +46 LP - Division II -> III\nKhanedi  - SILVER IV (98 LP) +75 LP - Division III -> IV\nSLY LOKi - SILVER IV (28 LP) -36 LP\nggrandfatherr - SILVER IV (7 LP) -29 LP\nLord Loyesco - GOLD I (29 LP) -53 LP - Division I -> II\nVersatile - GOLD IV (17 LP) -81 LP - PROMOTED from SILVER to GOLD\nrileybash - GOLD IV (3 LP) -77 LP - PROMOTED from SILVER to GOLD\nMonteng - PLATINUM IV (33 LP) -22 LP - Division III -> IV",
+  "timestamp": "2025-07-22_19-43-18",
+  "changes": [
+    {
+      "summ_id": "SLY LOKi",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER IV",
+      "lp": 28,
+      "change": "-36 LP"
+    },
+    {
+      "summ_id": "rileybash",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 3,
+      "change": "-77 LP - PROMOTED from SILVER to GOLD"
+    },
+    {
+      "summ_id": "Lord Loyesco",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD I",
+      "lp": 29,
+      "change": "-53 LP - Division I -> II"
+    },
+    {
+      "summ_id": "DC Nalphstein",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE IV",
+      "lp": 7,
+      "change": "-25 LP"
+    },
+    {
+      "summ_id": "TK HYDRA",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE IV",
+      "lp": 24,
+      "change": "-29 LP"
+    },
+    {
+      "summ_id": "Versatile",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 17,
+      "change": "-81 LP - PROMOTED from SILVER to GOLD"
+    },
+    {
+      "summ_id": "ggrandfatherr",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER IV",
+      "lp": 7,
+      "change": "-29 LP"
+    },
+    {
+      "summ_id": "Jjice222",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER III",
+      "lp": 76,
+      "change": "+46 LP - Division II -> III"
+    },
+    {
+      "summ_id": "DLR JOSH",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE I",
+      "lp": 71,
+      "change": "+51 LP"
+    },
+    {
+      "summ_id": "Monteng",
+      "queue": "Solo/Duo Queue",
+      "tier": "PLATINUM IV",
+      "lp": 33,
+      "change": "-22 LP - Division III -> IV"
+    },
+    {
+      "summ_id": "DheAbyss",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER II",
+      "lp": 29,
+      "change": "+4 LP"
+    },
+    {
+      "summ_id": "Khanedi ",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER IV",
+      "lp": 98,
+      "change": "+75 LP - Division III -> IV"
+    }
+  ],
+  "top_changes": [
+    {
+      "rank": 1,
+      "summ_id": "Versatile",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 17,
+      "change": "-81 LP - PROMOTED from SILVER to GOLD",
+      "absolute_change": 81
+    },
+    {
+      "rank": 2,
+      "summ_id": "rileybash",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 3,
+      "change": "-77 LP - PROMOTED from SILVER to GOLD",
+      "absolute_change": 77
+    },
+    {
+      "rank": 3,
+      "summ_id": "Khanedi ",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER IV",
+      "lp": 98,
+      "change": "+75 LP - Division III -> IV",
+      "absolute_change": 75
+    },
+    {
+      "rank": 4,
+      "summ_id": "Lord Loyesco",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD I",
+      "lp": 29,
+      "change": "-53 LP - Division I -> II",
+      "absolute_change": 53
+    },
+    {
+      "rank": 5,
+      "summ_id": "DLR JOSH",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE I",
+      "lp": 71,
+      "change": "+51 LP",
+      "absolute_change": 51
+    }
+  ]
+}

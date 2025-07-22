@@ -1,0 +1,165 @@
+{
+  "message": "*ELO CHANGES UPDATE*\n\n*Solo/Duo Queue:*\nJueviol - IRON I (18 LP) +18 LP - DEMOTED from BRONZE to IRON\nKT PapaChibs - IRON I (10 LP) -41 LP\nDLR JOSH - BRONZE I (9 LP) -62 LP\nmarvyiscool - BRONZE III (61 LP) +50 LP\nSRM Kanedi - BRONZE III (60 LP) -12 LP\nDC Nalphstein - BRONZE IV (9 LP) +2 LP\nRahzzcal - SILVER I (14 LP) -33 LP\nJjice222 - SILVER III (76 LP) +46 LP - Division II -> III\nLNK GuyNow - SILVER IV (85 LP) +48 LP\nVersatile - GOLD IV (71 LP) +54 LP\nrileybash - GOLD IV (70 LP) +67 LP\nOTPStormbringer - GOLD IV (44 LP) +19 LP\nNigerianFaker - PLATINUM IV (40 LP) +20 LP\nMonteng - PLATINUM IV (11 LP) -22 LP\n\n*Flex Queue:*\nNigerianFaker - BRONZE II (87 LP) -12 LP\nrileybash - GOLD IV (13 LP) -14 LP",
+  "timestamp": "2025-07-22_19-45-07",
+  "changes": [
+    {
+      "summ_id": "rileybash",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 70,
+      "change": "+67 LP"
+    },
+    {
+      "summ_id": "rileybash",
+      "queue": "Flex Queue",
+      "tier": "GOLD IV",
+      "lp": 13,
+      "change": "-14 LP"
+    },
+    {
+      "summ_id": "DC Nalphstein",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE IV",
+      "lp": 9,
+      "change": "+2 LP"
+    },
+    {
+      "summ_id": "Versatile",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 71,
+      "change": "+54 LP"
+    },
+    {
+      "summ_id": "NigerianFaker",
+      "queue": "Solo/Duo Queue",
+      "tier": "PLATINUM IV",
+      "lp": 40,
+      "change": "+20 LP"
+    },
+    {
+      "summ_id": "NigerianFaker",
+      "queue": "Flex Queue",
+      "tier": "BRONZE II",
+      "lp": 87,
+      "change": "-12 LP"
+    },
+    {
+      "summ_id": "KT PapaChibs",
+      "queue": "Solo/Duo Queue",
+      "tier": "IRON I",
+      "lp": 10,
+      "change": "-41 LP"
+    },
+    {
+      "summ_id": "Jjice222",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER III",
+      "lp": 76,
+      "change": "+46 LP - Division II -> III"
+    },
+    {
+      "summ_id": "SRM Kanedi",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE III",
+      "lp": 60,
+      "change": "-12 LP"
+    },
+    {
+      "summ_id": "DLR JOSH",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE I",
+      "lp": 9,
+      "change": "-62 LP"
+    },
+    {
+      "summ_id": "OTPStormbringer",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 44,
+      "change": "+19 LP"
+    },
+    {
+      "summ_id": "Jueviol",
+      "queue": "Solo/Duo Queue",
+      "tier": "IRON I",
+      "lp": 18,
+      "change": "+18 LP - DEMOTED from BRONZE to IRON"
+    },
+    {
+      "summ_id": "Monteng",
+      "queue": "Solo/Duo Queue",
+      "tier": "PLATINUM IV",
+      "lp": 11,
+      "change": "-22 LP"
+    },
+    {
+      "summ_id": "LNK GuyNow",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER IV",
+      "lp": 85,
+      "change": "+48 LP"
+    },
+    {
+      "summ_id": "marvyiscool",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE III",
+      "lp": 61,
+      "change": "+50 LP"
+    },
+    {
+      "summ_id": "Rahzzcal",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER I",
+      "lp": 14,
+      "change": "-33 LP"
+    }
+  ],
+  "top_changes": [
+    {
+      "rank": 1,
+      "summ_id": "rileybash",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 70,
+      "change": "+67 LP",
+      "absolute_change": 67
+    },
+    {
+      "rank": 2,
+      "summ_id": "DLR JOSH",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE I",
+      "lp": 9,
+      "change": "-62 LP",
+      "absolute_change": 62
+    },
+    {
+      "rank": 3,
+      "summ_id": "Versatile",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 71,
+      "change": "+54 LP",
+      "absolute_change": 54
+    },
+    {
+      "rank": 4,
+      "summ_id": "marvyiscool",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE III",
+      "lp": 61,
+      "change": "+50 LP",
+      "absolute_change": 50
+    },
+    {
+      "rank": 5,
+      "summ_id": "LNK GuyNow",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER IV",
+      "lp": 85,
+      "change": "+48 LP",
+      "absolute_change": 48
+    }
+  ]
+}
