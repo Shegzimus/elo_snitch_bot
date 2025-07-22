@@ -161,7 +161,7 @@ def main():
         print("No data fetched from Google Sheets.")
     else:
         print("Data fetched successfully.")
-        print(df.head())
+        print(df)
         load_to_db(df, table_name="form_responses", db_connection=engine)  # Load to database
 
 
@@ -177,8 +177,8 @@ if __name__ == "__main__":
         # Then run the main function
         main()
     except Exception as e:
-        print(f"\n❌ An error occurred: {str(e)}")
-        print("\nTroubleshooting steps:")
+        print(f"\n An error occurred: {str(e)}")
+        print("\n Troubleshooting steps:")
         print("1. Verify your internet connection")
         print("2. Check if the Google Sheet ID is correct and shared with the service account")
         print("3. Ensure the Google Sheets API is enabled in your Google Cloud project")
