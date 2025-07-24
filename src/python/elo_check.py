@@ -115,7 +115,7 @@ def elo_check() -> tuple[list, list]:
         
         # Add delay between requests to respect rate limits
         # Riot API allows 20 requests per second, so 0.1 second delay is safe
-        time.sleep(0.2)
+        time.sleep(0.1)
 
     return solo_queue_elo, flex_queue_elo, puuid_df
 
