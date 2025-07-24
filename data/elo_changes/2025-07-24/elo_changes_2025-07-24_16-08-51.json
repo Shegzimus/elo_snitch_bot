@@ -1,0 +1,165 @@
+{
+  "message": "*ELO CHANGES UPDATE*\n\n*Solo/Duo Queue:*\nKT PapaChibs - IRON I (7 LP) -3 LP\nJueviol - IRON II (82 LP) +64 LP - Division I -> II\nSRM Kanedi - BRONZE II (68 LP) +8 LP - Division III -> II\nDLR JOSH - BRONZE II (61 LP) +52 LP - Division I -> II\nmarvyiscool - BRONZE III (83 LP) +22 LP\nTK HYDRA - BRONZE IV (20 LP) -4 LP\nJjice222 - SILVER III (76 LP) +46 LP - Division II -> III\nSLY LOKi - SILVER IV (0 LP) -28 LP\nTK SavageMummy - GOLD II (85 LP) +44 LP - Division III -> II\nVersatile - GOLD III (36 LP) -35 LP - Division IV -> III\nTK friendly - GOLD III (9 LP) -20 LP\nOTPStormbringer - GOLD IV (0 LP) -44 LP\nMonteng - PLATINUM IV (14 LP) +3 LP\n\n*Flex Queue:*\nnovas3nsei - GOLD II (10 LP) +9 LP\nrileybash - GOLD IV (31 LP) +18 LP\nMonteng - PLATINUM II (58 LP) +28 LP",
+  "timestamp": "2025-07-24_16-08-51",
+  "changes": [
+    {
+      "summ_id": "TK SavageMummy",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD II",
+      "lp": 85,
+      "change": "+44 LP - Division III -> II"
+    },
+    {
+      "summ_id": "TK friendly",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD III",
+      "lp": 9,
+      "change": "-20 LP"
+    },
+    {
+      "summ_id": "SLY LOKi",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER IV",
+      "lp": 0,
+      "change": "-28 LP"
+    },
+    {
+      "summ_id": "rileybash",
+      "queue": "Flex Queue",
+      "tier": "GOLD IV",
+      "lp": 31,
+      "change": "+18 LP"
+    },
+    {
+      "summ_id": "TK HYDRA",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE IV",
+      "lp": 20,
+      "change": "-4 LP"
+    },
+    {
+      "summ_id": "Versatile",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD III",
+      "lp": 36,
+      "change": "-35 LP - Division IV -> III"
+    },
+    {
+      "summ_id": "KT PapaChibs",
+      "queue": "Solo/Duo Queue",
+      "tier": "IRON I",
+      "lp": 7,
+      "change": "-3 LP"
+    },
+    {
+      "summ_id": "Jjice222",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER III",
+      "lp": 76,
+      "change": "+46 LP - Division II -> III"
+    },
+    {
+      "summ_id": "SRM Kanedi",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE II",
+      "lp": 68,
+      "change": "+8 LP - Division III -> II"
+    },
+    {
+      "summ_id": "DLR JOSH",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE II",
+      "lp": 61,
+      "change": "+52 LP - Division I -> II"
+    },
+    {
+      "summ_id": "OTPStormbringer",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 0,
+      "change": "-44 LP"
+    },
+    {
+      "summ_id": "Jueviol",
+      "queue": "Solo/Duo Queue",
+      "tier": "IRON II",
+      "lp": 82,
+      "change": "+64 LP - Division I -> II"
+    },
+    {
+      "summ_id": "Monteng",
+      "queue": "Solo/Duo Queue",
+      "tier": "PLATINUM IV",
+      "lp": 14,
+      "change": "+3 LP"
+    },
+    {
+      "summ_id": "Monteng",
+      "queue": "Flex Queue",
+      "tier": "PLATINUM II",
+      "lp": 58,
+      "change": "+28 LP"
+    },
+    {
+      "summ_id": "novas3nsei",
+      "queue": "Flex Queue",
+      "tier": "GOLD II",
+      "lp": 10,
+      "change": "+9 LP"
+    },
+    {
+      "summ_id": "marvyiscool",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE III",
+      "lp": 83,
+      "change": "+22 LP"
+    }
+  ],
+  "top_changes": [
+    {
+      "rank": 1,
+      "summ_id": "Jueviol",
+      "queue": "Solo/Duo Queue",
+      "tier": "IRON II",
+      "lp": 82,
+      "change": "+64 LP - Division I -> II",
+      "absolute_change": 64
+    },
+    {
+      "rank": 2,
+      "summ_id": "DLR JOSH",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE II",
+      "lp": 61,
+      "change": "+52 LP - Division I -> II",
+      "absolute_change": 52
+    },
+    {
+      "rank": 3,
+      "summ_id": "Jjice222",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER III",
+      "lp": 76,
+      "change": "+46 LP - Division II -> III",
+      "absolute_change": 46
+    },
+    {
+      "rank": 4,
+      "summ_id": "TK SavageMummy",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD II",
+      "lp": 85,
+      "change": "+44 LP - Division III -> II",
+      "absolute_change": 44
+    },
+    {
+      "rank": 5,
+      "summ_id": "OTPStormbringer",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 0,
+      "change": "-44 LP",
+      "absolute_change": 44
+    }
+  ]
+}

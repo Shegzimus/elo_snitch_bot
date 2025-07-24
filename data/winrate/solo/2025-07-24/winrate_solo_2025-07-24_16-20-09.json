@@ -1,0 +1,420 @@
+{
+  "message": "*Solo/Duo Queue Win Rates:*\nAJsBigBackClock - DIAMOND II (58.82% | 10W-7L)\nDC Nalphstein - BRONZE IV (47.66% | 153W-168L)\nDheAbyss - GOLD IV (52.97% | 107W-95L)\nDLR JOSH - BRONZE II (51.36% | 113W-107L)\nDr backshots MD - PLATINUM II (52.55% | 206W-186L)\nDrowsytroll - BRONZE IV (45.45% | 20W-24L)\nEndar - GOLD IV (50.68% | 259W-252L)\nFaultySwitch - SILVER II (55.14% | 102W-83L)\nggrandfatherr - SILVER IV (50.3% | 84W-83L)\nGodstime - IRON II (50.0% | 8W-8L)\nJjice222 - SILVER III (50.66% | 77W-75L)\nJueviol - IRON II (48.92% | 113W-118L)\nK3 Teedawt - IRON I (50.0% | 71W-71L)\nKhanedi  - SILVER IV (47.17% | 50W-56L)\nKingmaker - GOLD IV (41.67% | 35W-49L)\nKT PapaChibs - IRON I (41.67% | 5W-7L)\nKT PapaChiibs  - BRONZE II (49.59% | 60W-61L)\nLNK GuyNow - SILVER IV (49.74% | 192W-194L)\nLord Loyesco - GOLD I (52.28% | 309W-282L)\nLustyKami - BRONZE IV (36.84% | 7W-12L)\nmarvyiscool - BRONZE III (49.17% | 298W-308L)\nMenoGrande - SILVER III (49.35% | 76W-78L)\nMonteng - PLATINUM IV (50.98% | 235W-226L)\nnawtydog - SILVER II (49.21% | 93W-96L)\nNigerian King - GOLD III (63.41% | 52W-30L)\nNigerian Lotus - BRONZE III (52.44% | 43W-39L)\nNigerianFaker - PLATINUM IV (50.33% | 77W-76L)\nnovas3nsei - PLATINUM III (48.77% | 99W-104L)\nOTPStormbringer - GOLD IV (50.84% | 364W-352L)\nRahzzcal - SILVER I (48.81% | 184W-193L)\nrileybash - GOLD IV (57.89% | 22W-16L)\nSadme17 - GOLD IV (51.33% | 77W-73L)\nShegz - PLATINUM III (43.37% | 72W-94L)\nSLY LOKi - SILVER IV (51.42% | 199W-188L)\nSRM Kanedi - BRONZE II (50.0% | 31W-31L)\nSRM Silverfangs - PLATINUM II (12.5% | 1W-7L)\nTE PrismoO - SILVER I (47.68% | 72W-79L)\nTE XxRuina - GOLD III (44.23% | 23W-29L)\nTheStarOfMorning - EMERALD I (45.16% | 28W-34L)\nTK friendly - GOLD III (51.69% | 244W-228L)\nTK HYDRA - BRONZE IV (48.96% | 211W-220L)\nTK NigerianPluto - GOLD IV (50.85% | 298W-288L)\nTK SavageMummy - GOLD II (50.95% | 403W-388L)\nVersatile - GOLD III (53.47% | 108W-94L)\nVillanelle - GOLD IV (53.33% | 120W-105L)\nZanbacto - GOLD IV (50.0% | 157W-157L)\n",
+  "timestamp": "2025-07-24_16-20-09",
+  "changes": [
+    {
+      "summ_id": "AJsBigBackClock",
+      "tier": "DIAMOND",
+      "rank": "II",
+      "wins": 10,
+      "losses": 7,
+      "total_games": 17,
+      "win_rate": 58.82
+    },
+    {
+      "summ_id": "DC Nalphstein",
+      "tier": "BRONZE",
+      "rank": "IV",
+      "wins": 153,
+      "losses": 168,
+      "total_games": 321,
+      "win_rate": 47.66
+    },
+    {
+      "summ_id": "DheAbyss",
+      "tier": "GOLD",
+      "rank": "IV",
+      "wins": 107,
+      "losses": 95,
+      "total_games": 202,
+      "win_rate": 52.97
+    },
+    {
+      "summ_id": "DLR JOSH",
+      "tier": "BRONZE",
+      "rank": "II",
+      "wins": 113,
+      "losses": 107,
+      "total_games": 220,
+      "win_rate": 51.36
+    },
+    {
+      "summ_id": "Dr backshots MD",
+      "tier": "PLATINUM",
+      "rank": "II",
+      "wins": 206,
+      "losses": 186,
+      "total_games": 392,
+      "win_rate": 52.55
+    },
+    {
+      "summ_id": "Drowsytroll",
+      "tier": "BRONZE",
+      "rank": "IV",
+      "wins": 20,
+      "losses": 24,
+      "total_games": 44,
+      "win_rate": 45.45
+    },
+    {
+      "summ_id": "Endar",
+      "tier": "GOLD",
+      "rank": "IV",
+      "wins": 259,
+      "losses": 252,
+      "total_games": 511,
+      "win_rate": 50.68
+    },
+    {
+      "summ_id": "FaultySwitch",
+      "tier": "SILVER",
+      "rank": "II",
+      "wins": 102,
+      "losses": 83,
+      "total_games": 185,
+      "win_rate": 55.14
+    },
+    {
+      "summ_id": "ggrandfatherr",
+      "tier": "SILVER",
+      "rank": "IV",
+      "wins": 84,
+      "losses": 83,
+      "total_games": 167,
+      "win_rate": 50.3
+    },
+    {
+      "summ_id": "Godstime",
+      "tier": "IRON",
+      "rank": "II",
+      "wins": 8,
+      "losses": 8,
+      "total_games": 16,
+      "win_rate": 50.0
+    },
+    {
+      "summ_id": "Jjice222",
+      "tier": "SILVER",
+      "rank": "III",
+      "wins": 77,
+      "losses": 75,
+      "total_games": 152,
+      "win_rate": 50.66
+    },
+    {
+      "summ_id": "Jueviol",
+      "tier": "IRON",
+      "rank": "II",
+      "wins": 113,
+      "losses": 118,
+      "total_games": 231,
+      "win_rate": 48.92
+    },
+    {
+      "summ_id": "K3 Teedawt",
+      "tier": "IRON",
+      "rank": "I",
+      "wins": 71,
+      "losses": 71,
+      "total_games": 142,
+      "win_rate": 50.0
+    },
+    {
+      "summ_id": "Khanedi ",
+      "tier": "SILVER",
+      "rank": "IV",
+      "wins": 50,
+      "losses": 56,
+      "total_games": 106,
+      "win_rate": 47.17
+    },
+    {
+      "summ_id": "Kingmaker",
+      "tier": "GOLD",
+      "rank": "IV",
+      "wins": 35,
+      "losses": 49,
+      "total_games": 84,
+      "win_rate": 41.67
+    },
+    {
+      "summ_id": "KT PapaChibs",
+      "tier": "IRON",
+      "rank": "I",
+      "wins": 5,
+      "losses": 7,
+      "total_games": 12,
+      "win_rate": 41.67
+    },
+    {
+      "summ_id": "KT PapaChiibs ",
+      "tier": "BRONZE",
+      "rank": "II",
+      "wins": 60,
+      "losses": 61,
+      "total_games": 121,
+      "win_rate": 49.59
+    },
+    {
+      "summ_id": "LNK GuyNow",
+      "tier": "SILVER",
+      "rank": "IV",
+      "wins": 192,
+      "losses": 194,
+      "total_games": 386,
+      "win_rate": 49.74
+    },
+    {
+      "summ_id": "Lord Loyesco",
+      "tier": "GOLD",
+      "rank": "I",
+      "wins": 309,
+      "losses": 282,
+      "total_games": 591,
+      "win_rate": 52.28
+    },
+    {
+      "summ_id": "LustyKami",
+      "tier": "BRONZE",
+      "rank": "IV",
+      "wins": 7,
+      "losses": 12,
+      "total_games": 19,
+      "win_rate": 36.84
+    },
+    {
+      "summ_id": "marvyiscool",
+      "tier": "BRONZE",
+      "rank": "III",
+      "wins": 298,
+      "losses": 308,
+      "total_games": 606,
+      "win_rate": 49.17
+    },
+    {
+      "summ_id": "MenoGrande",
+      "tier": "SILVER",
+      "rank": "III",
+      "wins": 76,
+      "losses": 78,
+      "total_games": 154,
+      "win_rate": 49.35
+    },
+    {
+      "summ_id": "Monteng",
+      "tier": "PLATINUM",
+      "rank": "IV",
+      "wins": 235,
+      "losses": 226,
+      "total_games": 461,
+      "win_rate": 50.98
+    },
+    {
+      "summ_id": "nawtydog",
+      "tier": "SILVER",
+      "rank": "II",
+      "wins": 93,
+      "losses": 96,
+      "total_games": 189,
+      "win_rate": 49.21
+    },
+    {
+      "summ_id": "Nigerian King",
+      "tier": "GOLD",
+      "rank": "III",
+      "wins": 52,
+      "losses": 30,
+      "total_games": 82,
+      "win_rate": 63.41
+    },
+    {
+      "summ_id": "Nigerian Lotus",
+      "tier": "BRONZE",
+      "rank": "III",
+      "wins": 43,
+      "losses": 39,
+      "total_games": 82,
+      "win_rate": 52.44
+    },
+    {
+      "summ_id": "NigerianFaker",
+      "tier": "PLATINUM",
+      "rank": "IV",
+      "wins": 77,
+      "losses": 76,
+      "total_games": 153,
+      "win_rate": 50.33
+    },
+    {
+      "summ_id": "novas3nsei",
+      "tier": "PLATINUM",
+      "rank": "III",
+      "wins": 99,
+      "losses": 104,
+      "total_games": 203,
+      "win_rate": 48.77
+    },
+    {
+      "summ_id": "OTPStormbringer",
+      "tier": "GOLD",
+      "rank": "IV",
+      "wins": 364,
+      "losses": 352,
+      "total_games": 716,
+      "win_rate": 50.84
+    },
+    {
+      "summ_id": "Rahzzcal",
+      "tier": "SILVER",
+      "rank": "I",
+      "wins": 184,
+      "losses": 193,
+      "total_games": 377,
+      "win_rate": 48.81
+    },
+    {
+      "summ_id": "rileybash",
+      "tier": "GOLD",
+      "rank": "IV",
+      "wins": 22,
+      "losses": 16,
+      "total_games": 38,
+      "win_rate": 57.89
+    },
+    {
+      "summ_id": "Sadme17",
+      "tier": "GOLD",
+      "rank": "IV",
+      "wins": 77,
+      "losses": 73,
+      "total_games": 150,
+      "win_rate": 51.33
+    },
+    {
+      "summ_id": "Shegz",
+      "tier": "PLATINUM",
+      "rank": "III",
+      "wins": 72,
+      "losses": 94,
+      "total_games": 166,
+      "win_rate": 43.37
+    },
+    {
+      "summ_id": "SLY LOKi",
+      "tier": "SILVER",
+      "rank": "IV",
+      "wins": 199,
+      "losses": 188,
+      "total_games": 387,
+      "win_rate": 51.42
+    },
+    {
+      "summ_id": "SRM Kanedi",
+      "tier": "BRONZE",
+      "rank": "II",
+      "wins": 31,
+      "losses": 31,
+      "total_games": 62,
+      "win_rate": 50.0
+    },
+    {
+      "summ_id": "SRM Silverfangs",
+      "tier": "PLATINUM",
+      "rank": "II",
+      "wins": 1,
+      "losses": 7,
+      "total_games": 8,
+      "win_rate": 12.5
+    },
+    {
+      "summ_id": "TE PrismoO",
+      "tier": "SILVER",
+      "rank": "I",
+      "wins": 72,
+      "losses": 79,
+      "total_games": 151,
+      "win_rate": 47.68
+    },
+    {
+      "summ_id": "TE XxRuina",
+      "tier": "GOLD",
+      "rank": "III",
+      "wins": 23,
+      "losses": 29,
+      "total_games": 52,
+      "win_rate": 44.23
+    },
+    {
+      "summ_id": "TheStarOfMorning",
+      "tier": "EMERALD",
+      "rank": "I",
+      "wins": 28,
+      "losses": 34,
+      "total_games": 62,
+      "win_rate": 45.16
+    },
+    {
+      "summ_id": "TK friendly",
+      "tier": "GOLD",
+      "rank": "III",
+      "wins": 244,
+      "losses": 228,
+      "total_games": 472,
+      "win_rate": 51.69
+    },
+    {
+      "summ_id": "TK HYDRA",
+      "tier": "BRONZE",
+      "rank": "IV",
+      "wins": 211,
+      "losses": 220,
+      "total_games": 431,
+      "win_rate": 48.96
+    },
+    {
+      "summ_id": "TK NigerianPluto",
+      "tier": "GOLD",
+      "rank": "IV",
+      "wins": 298,
+      "losses": 288,
+      "total_games": 586,
+      "win_rate": 50.85
+    },
+    {
+      "summ_id": "TK SavageMummy",
+      "tier": "GOLD",
+      "rank": "II",
+      "wins": 403,
+      "losses": 388,
+      "total_games": 791,
+      "win_rate": 50.95
+    },
+    {
+      "summ_id": "Versatile",
+      "tier": "GOLD",
+      "rank": "III",
+      "wins": 108,
+      "losses": 94,
+      "total_games": 202,
+      "win_rate": 53.47
+    },
+    {
+      "summ_id": "Villanelle",
+      "tier": "GOLD",
+      "rank": "IV",
+      "wins": 120,
+      "losses": 105,
+      "total_games": 225,
+      "win_rate": 53.33
+    },
+    {
+      "summ_id": "Zanbacto",
+      "tier": "GOLD",
+      "rank": "IV",
+      "wins": 157,
+      "losses": 157,
+      "total_games": 314,
+      "win_rate": 50.0
+    }
+  ]
+}
