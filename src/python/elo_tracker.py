@@ -36,7 +36,7 @@ TIER_ORDER:list[str] = [
     "CHALLENGER"
 ]
 
-DIVISION_ORDER:list[str] = ["I", "II", "III", "IV"]
+DIVISION_ORDER:list[str] = ["IV", "III", "II", "I"]
 
 def get_current_date_time()-> Tuple[str, str]:
     now = datetime.now()
@@ -58,6 +58,10 @@ def get_tier_index(tier: str)-> int:
 
 # Helper function to get division index
 def get_division_index(division: str)-> int:
+    """
+    Get division index where higher index = better division
+    IV=0 (worst), III=1, II=2, I=3 (best)
+    """
     if division is None:
         return 0
     return DIVISION_ORDER.index(division)
@@ -151,33 +155,52 @@ def calculate_elo_change(
     
     # Check for division change
     division_change = None
+    division_change_type = None
     if old_tier == new_tier and old_division and new_division: # Skips division comparison if elo is MASTER and above
         old_div_idx = get_division_index(old_division)
         new_div_idx = get_division_index(new_division)
         
         if new_div_idx > old_div_idx:
-            division_change = f"{DIVISION_ORDER[old_div_idx]} -> {DIVISION_ORDER[new_div_idx]}"
+            # Higher index = better division (promotion within tier)
+            division_change = f"{old_division} → {new_division}"
+            division_change_type = "PROMOTED"
         elif new_div_idx < old_div_idx:
-            division_change = f"{DIVISION_ORDER[new_div_idx]} -> {DIVISION_ORDER[old_div_idx]}"
-    
+            # Lower index = worse division (demotion within tier)
+            division_change = f"{old_division} → {new_division}"
+            division_change_type = "DEMOTED"
+        
     # Format total change message
     change_parts = []
     
-    # Add LP change
+    # Add LP change first
     if lp_change != 0:
         change_parts.append(f"{lp_change:+} LP")
     
-    # Add tier change
+    # Handle tier changes (takes priority over division changes)
     if tier_change:
-        change_parts.append(f"{tier_change} from {old_tier} to {new_tier}")
+        if tier_change == "PROMOTED":
+            change_parts.append(f"PROMOTED from {old_tier} to {new_tier}")
+        else:
+            change_parts.append(f"DEMOTED from {old_tier} to {new_tier}")
+        
+    # Handle division changes (only if no tier change)
+    elif division_change:
+        if division_change_type == "PROMOTED":
+            change_parts.append(f"Promoted to Division {division_change}")
+        else:
+            change_parts.append(f"Demoted to Division {division_change}")
     
-    # Add division change
-    if division_change:
-        change_parts.append(f"Division {division_change}")
-    
-    # If no changes, just show current tier
+    # Validate that the change makes logical sense
+    if lp_change > 0 and division_change_type == "DEMOTED" and not tier_change:
+        # This shouldn't happen - gaining LP but getting demoted within same tier
+        change_parts = [f"{lp_change:+} LP"]
+    elif lp_change < 0 and division_change_type == "PROMOTED" and not tier_change:
+        # Also shouldn't happen - losing LP but getting promoted within same tier
+        change_parts = [f"{lp_change:+} LP"]
+
+    # If no changes detected, just show current tier/division
     if not change_parts:
-        change_parts.append(f"{new_tier} {new_division if new_division else ''}")
+        change_parts.append(f"No change - {new_tier} {new_division if new_division else ''}")
     
     return {
         "lp_change": lp_change,
@@ -227,66 +250,118 @@ def fetch_previous_elo(db_connection: object)-> Tuple[pd.DataFrame, pd.DataFrame
         
         return current_solo, current_flex, previous_solo, previous_flex
 
-def track_elo_changes()-> List[Dict[str, any]]:
+def process_queue_changes(
+    summ_id: str,
+    current_df: pd.DataFrame,
+    previous_df: pd.DataFrame,
+    queue_name: str
+) -> List[Dict[str, any]]:
+    """
+    Process ELO changes for a specific queue type and summoner.
+    
+    Args:
+        summ_id: Summoner ID to process
+        current_df: Current scan data for the queue
+        previous_df: Previous scan data for the queue
+        queue_name: Display name for the queue (e.g., "Solo/Duo Queue")
+        
+    Returns:
+        List containing change data if there are changes, empty list otherwise
+    """
+    if current_df.empty:
+        return []
+    
+    current_data = current_df[current_df['summ_id'] == summ_id]
+    if current_data.empty:
+        return []
+    
+    previous_data = previous_df[previous_df['summ_id'] == summ_id]
+    if previous_data.empty:
+        return []
+    
+    # Extract current and previous values
+    current_row = current_data.iloc[0]
+    previous_row = previous_data.iloc[0]
+    
+    change_info = calculate_elo_change(
+        old_tier=previous_row['tier'],
+        old_division=previous_row['rank'],
+        old_lp=previous_row['league_points'],
+        new_tier=current_row['tier'],
+        new_division=current_row['rank'],
+        new_lp=current_row['league_points']
+    )
+    
+    # Check if there's actually a change (not just displaying current tier)
+    current_tier_display = f"{current_row['tier']} {current_row['rank'] if current_row['rank'] else ''}"
+    if change_info["total_change"] == current_tier_display:
+        return []  # No actual change occurred
+    
+    return [{
+        "summ_id": summ_id,
+        "queue": queue_name,
+        "tier": format_tier_rank(current_row['tier'], current_row['rank']),
+        "lp": current_row['league_points'],
+        "change": change_info["total_change"]
+    }]
+
+# -----------------------------
+
+def get_queue_data() -> Tuple[pd.DataFrame, Dict[str, Tuple[pd.DataFrame, pd.DataFrame]]]:
+    """
+    Fetch and organize queue data for processing.
+    
+    Returns:
+        Tuple of (puuid_df, queue_data_dict) where queue_data_dict contains
+        current and previous dataframes for each queue type
+    """
     puuid_df = fetch_puuid(engine)
     if puuid_df.empty:
+        return puuid_df, {}
+    
+    current_solo, current_flex, previous_solo, previous_flex = fetch_previous_elo(engine)
+    
+    queue_data = {
+        "Solo/Duo Queue": (current_solo, previous_solo),
+        "Flex Queue": (current_flex, previous_flex)
+    }
+    
+    return puuid_df, queue_data
+
+
+
+
+
+def track_elo_changes() -> List[Dict[str, any]]:
+    """
+    Track ELO changes for all summoners across all queue types.
+    
+    Returns:
+        List of dictionaries containing change information for summoners with changes
+    """
+    puuid_df, queue_data = get_queue_data()
+    
+    if puuid_df.empty:
         print("No PUUID data found.")
-        return None
+        return []
     
-    current_solo_df, current_flex_df, previous_solo_df, previous_flex_df = fetch_previous_elo(engine)
+    if not queue_data:
+        print("No queue data available.")
+        return []
     
-    changes = []
+    all_changes = []
     
+    # Process each summoner
     for _, row in puuid_df.iterrows():
         summ_id = row['summ_id']
         
-        if not current_solo_df.empty:
-            current_solo = current_solo_df[current_solo_df['summ_id'] == summ_id]
-            if not current_solo.empty:
-                previous_solo = previous_solo_df[previous_solo_df['summ_id'] == summ_id]
-                if not previous_solo.empty:
-                    change_info = calculate_elo_change(
-                        old_tier=previous_solo['tier'].iloc[0],
-                        old_division=previous_solo['rank'].iloc[0],
-                        old_lp=previous_solo['league_points'].iloc[0],
-                        new_tier=current_solo['tier'].iloc[0],
-                        new_division=current_solo['rank'].iloc[0],
-                        new_lp=current_solo['league_points'].iloc[0]
-                    )
-                    
-                    if change_info["total_change"] != f"{current_solo['tier'].iloc[0]} {current_solo['rank'].iloc[0] if current_solo['rank'].iloc[0] else ''}":
-                        changes.append({
-                            "summ_id": summ_id,
-                            "queue": "Solo/Duo Queue",
-                            "tier": format_tier_rank(current_solo['tier'].iloc[0], current_solo['rank'].iloc[0]),
-                            "lp": current_solo['league_points'].iloc[0],
-                            "change": change_info["total_change"]
-                        })
-        
-        if not current_flex_df.empty:
-            current_flex = current_flex_df[current_flex_df['summ_id'] == summ_id]
-            if not current_flex.empty:
-                previous_flex = previous_flex_df[previous_flex_df['summ_id'] == summ_id]
-                if not previous_flex.empty:
-                    change_info = calculate_elo_change(
-                        old_tier=previous_flex['tier'].iloc[0],
-                        old_division=previous_flex['rank'].iloc[0],
-                        old_lp=previous_flex['league_points'].iloc[0],
-                        new_tier=current_flex['tier'].iloc[0],
-                        new_division=current_flex['rank'].iloc[0],
-                        new_lp=current_flex['league_points'].iloc[0]
-                    )
-                    
-                    if change_info["total_change"] != f"{current_flex['tier'].iloc[0]} {current_flex['rank'].iloc[0] if current_flex['rank'].iloc[0] else ''}":
-                        changes.append({
-                            "summ_id": summ_id,
-                            "queue": "Flex Queue",
-                            "tier": format_tier_rank(current_flex['tier'].iloc[0], current_flex['rank'].iloc[0]),
-                            "lp": current_flex['league_points'].iloc[0],
-                            "change": change_info["total_change"]
-                        })
+        # Process each queue type for this summoner
+        for queue_name, (current_df, previous_df) in queue_data.items():
+            changes = process_queue_changes(summ_id, current_df, previous_df, queue_name)
+            all_changes.extend(changes)
     
-    return changes
+    return all_changes
+
 
 
 def fetch_winrate()-> Tuple[List[Dict[str, any]], List[Dict[str, any]]]:
@@ -391,7 +466,46 @@ def format_winrate_message(winrate_data: List[Dict[str, any]], queue_type: str =
     return message
 
 
+# def format_elo_changes_message(changes: list) -> str:
+#     message = MESSAGE_HEADER
+    
+#     # Group changes by queue type
+#     queue_groups = {}
+#     for change in changes:
+#         queue = change['queue']
+#         if queue not in queue_groups:
+#             queue_groups[queue] = []
+#         queue_groups[queue].append(change)
+    
+#     # Format each queue group
+#     for queue, queue_changes in queue_groups.items():
+#         # Get the display name from QUEUE_TYPES, or use the queue value directly if not found
+#         queue_display = QUEUE_TYPES.get(queue, queue)
+#         message += f"*{queue_display}:*\n"
+        
+#         # Sort changes by tier and division
+#         queue_changes.sort(
+#             key=lambda x: (
+#                 get_tier_index(x['tier'].split()[0]),
+#                 get_division_index(x['tier'].split()[1]) if len(x['tier'].split()) > 1 else 0,
+#                 -x['lp']
+#             )
+#         )
+        
+#         for change in queue_changes:
+#             message += (
+#                 f"{change['summ_id']} - {change['tier']} ({change['lp']} LP) "
+#                 f"{change['change']}\n"
+#             )
+#         message += "\n"
+    
+#     return message.strip()
+
+
 def format_elo_changes_message(changes: list) -> str:
+    """
+    Format ELO changes with improved sorting logic
+    """
     message = MESSAGE_HEADER
     
     # Group changes by queue type
@@ -408,12 +522,13 @@ def format_elo_changes_message(changes: list) -> str:
         queue_display = QUEUE_TYPES.get(queue, queue)
         message += f"*{queue_display}:*\n"
         
-        # Sort changes by tier and division
+        # Sort changes by tier (ascending) and division (descending within tier)
+        # This will show IRON IV first, then IRON III, II, I, then BRONZE IV, etc.
         queue_changes.sort(
             key=lambda x: (
-                get_tier_index(x['tier'].split()[0]),
-                get_division_index(x['tier'].split()[1]) if len(x['tier'].split()) > 1 else 0,
-                -x['lp']
+                get_tier_index(x['tier'].split()[0]),  # Tier priority
+                -get_division_index(x['tier'].split()[1]) if len(x['tier'].split()) > 1 else 0,  # Division priority (negative for desc)
+                -x['lp']  # LP as tiebreaker (higher LP first)
             )
         )
         
