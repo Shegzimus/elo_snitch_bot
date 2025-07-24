@@ -1,208 +1,260 @@
-const { Client } = require('whatsapp-web.js');
+const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const fs = require('fs');
 const dotenv = require('dotenv');
 const path = require('path');
+
+
+console.log("Starting ELO Snitch Bot...");
+
+// Ensure the .wwebjs_auth directory exists
+const authDir = path.join(__dirname, '.wwebjs_auth');
+if (!fs.existsSync(authDir)) {
+    fs.mkdirSync(authDir, { recursive: true });
+}
 const envPath = path.resolve(__dirname, '../../config/.env');
+console.log('Looking for .env file at:', envPath);
+if (!fs.existsSync(envPath)) {
+    console.error('.env file not found at:', envPath);
+    console.log('Please create the .env file with WHATSAPP_GROUP_ID');
+    process.exit(1);
+} else {
+    console.log('.env file found');  // For debugging
+}
 
 dotenv.config({ path: envPath });
+// Check environment variables
+console.log('WHATSAPP_GROUP_ID:', process.env.WHATSAPP_GROUP_ID ? 'Set' : 'Not set');
 
 // Test message
-const testMessage = "*ELO SNITCH BOT ONLINE*\n\nI'm ready to help you track ELO changes and snitch on these hoes! Available commands:\n\n!topelo - Shows top 5 ELO changes\n!fullelo - Shows full ELO changes list\n\nType any command to get started!";
+const testMessage = "*ELO SNITCH BOT ONLINE*\n\nI'm ready to help you track ELO changes and snitch on these hoes! Available commands:\n\n!elocheck - Shows full ELO changes list\n!winrate - Shows winrate list\n\nType any command to get started!";
 
-// Initialize the client with session configuration
+// Initialize the client with LocalAuth for session persistence
+console.log('Initializing WhatsApp client...');
+
 const client = new Client({
+    authStrategy: new LocalAuth({
+        dataPath: authDir
+    }),
     puppeteer: {
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-    },
-    session: null // Force new session
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--single-process',
+            '--disable-gpu'
+        ]
+    }
+});
+
+console.log('Client created, setting up event listeners...');
+
+client.on('loading_screen', (percent, message) => {
+    console.log('Loading screen:', percent, message);
+});
+
+client.on('authenticated', () => {
+    console.log('Client authenticated successfully');
+});
+
+client.on('auth_failure', msg => {
+    console.error('Authentication failed:', msg);
 });
 
 client.on('qr', (qr) => {
-    // Generate and scan this code with your phone
+    console.log('QR Code received, scan with your phone:');
     qrcode.generate(qr, { small: true });
 });
 
-client.on('ready', () => {
+client.on('ready', async () => {
     console.log('Client is ready!');
     console.log('Bot is now active and monitoring messages...');
     
-    // Add a small delay before sending the test message
+    // Test basic functionality first
+    try {
+        const info = await client.info;
+        console.log('Client info:', info.wid._serialized);
+    } catch (error) {
+        console.error('Error getting client info:', error);
+    }
+
+
+    // Send test message with better error handling
     setTimeout(async () => {
         try {
             const groupId = process.env.WHATSAPP_GROUP_ID;
             if (!groupId) {
-                console.error('WhatsApp group ID not configured in .env file');
+                console.error('Whatsapp group ID not set in environment variables');
                 return;
             }
 
-            // Check if client is fully connected
-            const isConnected = await client.isConnected();
-            if (!isConnected) {
-                console.error('Client is not fully connected yet');
+            console.log('Attempting to send test message...');
+            console.log('Target group ID:', groupId);
+
+            // Format group ID properly
+            const formattedGroupId = groupId.includes('@g.us') ? groupId : `${groupId}@g.us`;
+            console.log('Formatted group ID:', formattedGroupId);
+
+            // Get all chats for debugging
+            console.log('Fetching all chats...');
+            const chats = await client.getChats();
+            console.log(`Found ${chats.length} chats total`);
+            
+            const groups = chats.filter(chat => chat.isGroup);
+            console.log(`Found ${groups.length} group chats:`);
+            groups.forEach((group, index) => {
+                console.log(`  ${index + 1}. ${group.name}: ${group.id._serialized}`);
+            });
+
+            // Find target chat
+            const targetChat = groups.find(chat => chat.id._serialized === formattedGroupId);
+            
+            if (!targetChat) {
+                console.error('Could not find target group chat');
+                console.log('Available group IDs:');
+                groups.forEach(group => {
+                    console.log(`  - ${group.id._serialized} (${group.name})`);
+                });
                 return;
             }
 
-            // Attempt to send message with retries
-            let retries = 3;
-            while (retries > 0) {
-                try {
-                    const chat = await client.getChatById(groupId);
-                    if (!chat) {
-                        console.error('Could not find chat with ID:', groupId);
-                        return;
-                    }
+            console.log(`Found target group: ${targetChat.name}`);
+            
+            // Send message
+            await targetChat.sendMessage(testMessage);
+            console.log('Test message sent successfully!');
 
-                    await chat.sendMessage(testMessage);
-                    console.log('Message sent successfully!');
-                    break;
-                } catch (err) {
-                    console.error(`Attempt ${4 - retries}: Error sending message:`, err);
-                    if (retries > 1) {
-                        console.log(`Retrying in 2 seconds...`);
-                        await new Promise(resolve => setTimeout(resolve, 2000));
-                    }
-                    retries--;
-                }
-            }
-
-            if (retries === 0) {
-                console.error('Failed to send message after 3 attempts');
-            }
         } catch (error) {
-            console.error('Unexpected error:', error);
+            console.error('Error in test message routine:', error);
+            console.error('Stack trace:', error.stack);
         }
-    }, 8000); // Increased delay to 8 seconds to ensure full connection
+    }, 10000); // 10 second delay
 });
 
-// Handle disconnection
 client.on('disconnected', (reason) => {
     console.log('Disconnected:', reason);
     console.log('Attempting to reconnect...');
-    client.initialize();
 });
 
-// Handle errors
 client.on('error', (err) => {
-    console.error('Error:', err);
-    console.log('Attempting to reconnect...');
-    client.initialize();
+    console.error('Client error:', err);
 });
 
-/**
- * Returns the path to the latest ELO changes JSON file.
- * If no ELO changes files are found, returns null.
- * @returns {string|null} The path to the latest ELO changes file
- */
+// Add process error handlers
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+// Rest of your functions (keeping them the same)
 function getLatestEloFile() {
     const eloChangesDir = '../../data/elo_changes';
     
-    // Get all date folders
-    const folders = fs.readdirSync(eloChangesDir)
-        .filter(item => fs.statSync(`${eloChangesDir}/${item}`).isDirectory());
-    
-    if (folders.length === 0) {
+    try {
+        if (!fs.existsSync(eloChangesDir)) {
+            console.log('ELO changes directory does not exist:', eloChangesDir);
+            return null;
+        }
+        
+        const folders = fs.readdirSync(eloChangesDir)
+            .filter(item => fs.statSync(`${eloChangesDir}/${item}`).isDirectory());
+        
+        if (folders.length === 0) {
+            return null;
+        }
+        
+        const latestFolder = folders.sort().pop();
+        const latestFolderPath = `${eloChangesDir}/${latestFolder}`;
+        
+        const files = fs.readdirSync(latestFolderPath)
+            .filter(file => file.endsWith('.json'));
+        
+        if (files.length === 0) {
+            return null;
+        }
+        
+        const latestFile = files.sort().pop();
+        return `${latestFolderPath}/${latestFile}`;
+    } catch (error) {
+        console.error('Error in getLatestEloFile:', error);
         return null;
     }
-    
-    // Get the latest folder (sorted by date)
-    const latestFolder = folders.sort().pop();
-    const latestFolderPath = `${eloChangesDir}/${latestFolder}`;
-    
-    // Get all JSON files in the latest folder
-    const files = fs.readdirSync(latestFolderPath)
-        .filter(file => file.endsWith('.json'));
-    
-    if (files.length === 0) {
-        return null;
-    }
-    
-    // Get the latest file (sorted by timestamp)
-    const latestFile = files.sort().pop();
-    return `${latestFolderPath}/${latestFile}`;
 }
 
-/**
- * Returns the path to the latest winrate JSON file.
- * If no winrate files are found, returns null.
- * @returns {string|null} The path to the latest winrate file
- */
 function getLatestWinrateFile() {
     const winrateDir = '../../data/winrate/solo';
     
-    // Get all date folders
-    const folders = fs.readdirSync(winrateDir)
-        .filter(item => {
-            const fullPath = path.join(winrateDir, item);
-            return fs.statSync(fullPath).isDirectory();
-        });
-    
-    if (folders.length === 0) {
-        console.error('No date folders found in winrate directory');
+    try {
+        if (!fs.existsSync(winrateDir)) {
+            console.log('Winrate directory does not exist:', winrateDir);
+            return null;
+        }
+        
+        const folders = fs.readdirSync(winrateDir)
+            .filter(item => {
+                const fullPath = path.join(winrateDir, item);
+                return fs.statSync(fullPath).isDirectory();
+            });
+        
+        if (folders.length === 0) {
+            console.error('No date folders found in winrate directory');
+            return null;
+        }
+        
+        const latestFolder = folders.sort().pop();
+        const latestFolderPath = path.join(winrateDir, latestFolder);
+        
+        const files = fs.readdirSync(latestFolderPath)
+            .filter(file => file.endsWith('.json') && file.startsWith('winrate_solo'));
+        
+        if (files.length === 0) {
+            console.error('No winrate JSON files found in', latestFolderPath);
+            return null;
+        }
+        
+        const latestFile = files.sort().pop();
+        return path.join(latestFolderPath, latestFile);
+    } catch (error) {
+        console.error('Error in getLatestWinrateFile:', error);
         return null;
     }
-    
-    // Get the latest folder (sorted by date)
-    const latestFolder = folders.sort().pop();
-    const latestFolderPath = path.join(winrateDir, latestFolder);
-    
-    // Get all JSON files in the latest folder
-    const files = fs.readdirSync(latestFolderPath)
-        .filter(file => file.endsWith('.json') && file.startsWith('winrate_solo'));
-    
-    if (files.length === 0) {
-        console.error('No winrate JSON files found in', latestFolderPath);
-        return null;
-    }
-    
-    // Get the latest file (sorted by timestamp)
-    const latestFile = files.sort().pop();
-    return path.join(latestFolderPath, latestFile);
 }
 
-/**
- * Formats a timestamp string into a more readable format.
- * @param {string} timestamp - The timestamp string to format
- * @returns {string} The formatted timestamp string
- */
 function formatTimestamp(timestamp) {
     if (!timestamp) return '';
     
-    // Format: Convert "2025-07-20_21-52-54" to "2025/07/20 21:52:54"
     const [datePart, timePart] = timestamp.split('_');
     const [year, month, day] = datePart.split('-');
     const [hour, minute, second] = timePart.split('-');
     return `${year}/${month}/${day} ${hour}:${minute}:${second}`;
 }
 
-/**
- * Formats winrate data into a human-readable message.
- * @param {Object} data - The winrate data to format
- * @returns {string} The formatted winrate message
- */
 function formatWinrate(data) {
     if (!data.changes || data.changes.length === 0) {
         return "No winrate data available!";
     }
 
-    // Sort by win rate descending, then by total games descending
     const sortedData = [...data.changes].sort((a, b) => {
         if (b.win_rate !== a.win_rate) {
-            return b.win_rate - a.win_rate; // Higher win rate first
+            return b.win_rate - a.win_rate;
         }
-        return (b.wins + b.losses) - (a.wins + a.losses); // More games first if win rates are equal
+        return (b.wins + b.losses) - (a.wins + a.losses);
     });
 
     let message = "*SOLO/DUO QUEUE WIN RATES*\n\n";
     
-    // Add top 10 players by win rate
     message += "*Top 10 Players by Win Rate:*\n";
     sortedData.slice(0, 10).forEach((player, index) => {
         message += `${index + 1}. ${player.summ_id} - ${player.tier} ${player.rank} (${player.win_rate}% | ${player.wins}W-${player.losses}L)\n`;
     });
     
-    // Add players with most games
     const mostGames = [...data.changes].sort((a, b) => 
         (b.wins + b.losses) - (a.wins + a.losses)
     ).slice(0, 5);
@@ -212,7 +264,6 @@ function formatWinrate(data) {
         message += `${index + 1}. ${player.summ_id} - ${player.wins + player.losses} games (${player.win_rate}%)\n`;
     });
     
-    // Add summary stats
     const totalGames = data.changes.reduce((sum, p) => sum + p.wins + p.losses, 0);
     const avgWinRate = data.changes.reduce((sum, p) => sum + p.win_rate, 0) / data.changes.length;
     
@@ -221,7 +272,6 @@ function formatWinrate(data) {
     message += `Total Games Tracked: ${totalGames}\n`;
     message += `Average Win Rate: ${avgWinRate.toFixed(2)}%\n`;
     
-    // Add timestamp if available
     if (data.timestamp) {
         const formattedTime = formatTimestamp(data.timestamp);
         message += `\n_Last updated: ${formattedTime}_`;
@@ -230,11 +280,6 @@ function formatWinrate(data) {
     return message;
 }
 
-/**
- * Formats ELO changes data into a human-readable message.
- * @param {Object} data - The ELO changes data to format
- * @returns {string} The formatted ELO changes message
- */
 function formatTopChanges(data) {
     if (!data.top_changes || data.top_changes.length === 0) {
         return "No ELO changes available!";
@@ -261,7 +306,6 @@ function formatFullChanges(data) {
 
     let message = "*FULL ELO CHANGES*\n\n";
     
-    // Group by queue type
     const queues = {};
     data.changes.forEach(change => {
         if (!queues[change.queue]) {
@@ -270,7 +314,6 @@ function formatFullChanges(data) {
         queues[change.queue].push(change);
     });
     
-    // Format each queue's changes
     Object.entries(queues).forEach(([queue, changes]) => {
         message += `*${queue}*: \n`;
         changes.forEach((change, index) => {
@@ -292,10 +335,10 @@ function formatFullChanges(data) {
 }
 
 client.on('message', async message => {
-    console.log(`Received message: ${message.body}`);
+    console.log(`📨 Received message: ${message.body}`);
     
-    // Handle !topelo command - shows top 5 changes
     if (message.body.toLowerCase() === '!topelo') {
+        console.log('Processing !topelo command');
         const latestFile = getLatestEloFile();
         if (!latestFile) {
             await message.reply('No ELO changes data available!');
@@ -306,14 +349,15 @@ client.on('message', async message => {
             const data = JSON.parse(fs.readFileSync(latestFile, 'utf8'));
             const formattedMessage = formatTopChanges(data);
             await message.reply(formattedMessage);
+            console.log('Sent topelo response');
         } catch (error) {
             console.error('Error processing ELO data:', error);
             await message.reply('Error processing ELO data. Please try again later.');
         }
     }
 
-    // Handle !elocheck command - shows full changes
     else if (message.body.toLowerCase() === '!elocheck') {
+        console.log('Processing !elocheck command');
         const latestFile = getLatestEloFile();
         if (!latestFile) {
             await message.reply('No ELO changes data available!');
@@ -324,14 +368,15 @@ client.on('message', async message => {
             const data = JSON.parse(fs.readFileSync(latestFile, 'utf8'));
             const formattedMessage = formatFullChanges(data);
             await message.reply(formattedMessage);
+            console.log('Sent elocheck response');
         } catch (error) {
             console.error('Error processing ELO data:', error);
             await message.reply('Error processing ELO data. Please try again later.');
         }
     }
 
-    // Handle !winrate command - shows winrate
     else if (message.body.toLowerCase() === '!winrate') {
+        console.log('Processing !winrate command');
         const latestFile = getLatestWinrateFile();
         if (!latestFile) {
             await message.reply('No winrate data available!');
@@ -342,6 +387,7 @@ client.on('message', async message => {
             const data = JSON.parse(fs.readFileSync(latestFile, 'utf8'));
             const formattedMessage = formatWinrate(data);
             await message.reply(formattedMessage);
+            console.log('Sent winrate response');
         } catch (error) {
             console.error('Error processing winrate data:', error);
             await message.reply('Error processing winrate data. Please try again later.');
@@ -349,13 +395,8 @@ client.on('message', async message => {
     }
 });
 
-
-
-
-
-
-
-
-
-
-client.initialize();
+console.log('🔄 Initializing client...');
+client.initialize().catch(error => {
+    console.error('Failed to initialize client:', error);
+    process.exit(1);
+});
