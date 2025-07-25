@@ -1,0 +1,578 @@
+{
+  "message": "*ELO CHANGES UPDATE*\n\n*Solo/Duo Queue:*\nK3 Teedawt - IRON I (90 LP) No change - IRON I\nJueviol - IRON II (78 LP) -4 LP\nGodstime - IRON II (77 LP) No change - IRON II\nSRM Kanedi - BRONZE II (86 LP) +18 LP\nDLR JOSH - BRONZE II (61 LP) No change - BRONZE II\nKT PapaChiibs  - BRONZE II (53 LP) No change - BRONZE II\nmarvyiscool - BRONZE III (33 LP) -50 LP\nLustyKami - BRONZE III (21 LP) -13 LP\nKT PapaChibs - BRONZE III (8 LP) +1 LP - PROMOTED from IRON to BRONZE\nNigerian Lotus - BRONZE III (8 LP) No change - BRONZE III\nDrowsytroll - BRONZE IV (25 LP) No change - BRONZE IV\nDrowsytroll - BRONZE IV (25 LP) No change - BRONZE IV\nTK HYDRA - BRONZE IV (20 LP) No change - BRONZE IV\nDC Nalphstein - BRONZE IV (9 LP) No change - BRONZE IV\nTE PrismoO - SILVER I (62 LP) No change - SILVER I\nRahzzcal - SILVER II (81 LP) +67 LP\nFaultySwitch - SILVER II (73 LP) No change - SILVER II\nnawtydog - SILVER II (1 LP) No change - SILVER II\nMenoGrande - SILVER III (94 LP) No change - SILVER III\nJjice222 - SILVER III (76 LP) +46 LP\nKhanedi  - SILVER IV (98 LP) No change - SILVER IV\nLNK GuyNow - SILVER IV (85 LP) No change - SILVER IV\nggrandfatherr - SILVER IV (7 LP) No change - SILVER IV\nSLY LOKi - SILVER IV (0 LP) No change - SILVER IV\nLord Loyesco - GOLD I (29 LP) No change - GOLD I\nTK SavageMummy - GOLD II (34 LP) -51 LP\nNigerian King - GOLD III (64 LP) No change - GOLD III\nTE XxRuina - GOLD III (47 LP) No change - GOLD III\nVersatile - GOLD III (36 LP) No change - GOLD III\nTK friendly - GOLD III (35 LP) +26 LP\nSadme17 - GOLD IV (97 LP) No change - GOLD IV\nKingmaker - GOLD IV (71 LP) No change - GOLD IV\nrileybash - GOLD IV (70 LP) No change - GOLD IV\nEndar - GOLD IV (58 LP) No change - GOLD IV\nVillanelle - GOLD IV (25 LP) No change - GOLD IV\nTK NigerianPluto - GOLD IV (0 LP) No change - GOLD IV\nOTPStormbringer - GOLD IV (0 LP) No change - GOLD IV\nZanbacto - GOLD IV (0 LP) No change - GOLD IV\nDheAbyss - GOLD IV (0 LP) No change - GOLD IV\nDr backshots MD - PLATINUM II (85 LP) No change - PLATINUM II\nSRM Silverfangs - PLATINUM II (14 LP) No change - PLATINUM II\nnovas3nsei - PLATINUM III (69 LP) No change - PLATINUM III\nShegz - PLATINUM III (16 LP) No change - PLATINUM III\nNigerianFaker - PLATINUM IV (40 LP) No change - PLATINUM IV\nMonteng - PLATINUM IV (14 LP) No change - PLATINUM IV\nTheStarOfMorning - EMERALD I (18 LP) No change - EMERALD I\nAJsBigBackClock - DIAMOND II (10 LP) No change - DIAMOND II\n\n*Flex Queue:*\nJjice222 - IRON I (89 LP) No change - IRON I\nggrandfatherr - IRON I (73 LP) No change - IRON I\nDLR JOSH - IRON I (39 LP) No change - IRON I\nSLY LOKi - IRON III (31 LP) No change - IRON III\nJueviol - IRON III (20 LP) No change - IRON III\nTK NigerianPluto - IRON III (16 LP) No change - IRON III\nBURNTDODO - BRONZE I (76 LP) No change - BRONZE I\nVersatile - BRONZE I (39 LP) No change - BRONZE I\nNigerianFaker - BRONZE II (87 LP) No change - BRONZE II\nEndar - BRONZE II (84 LP) No change - BRONZE II\nFaultySwitch - BRONZE II (24 LP) No change - BRONZE II\nSadme17 - BRONZE II (3 LP) No change - BRONZE II\nDC Nalphstein - BRONZE III (28 LP) No change - BRONZE III\nTK friendly - BRONZE IV (66 LP) No change - BRONZE IV\nTK SavageMummy - BRONZE IV (64 LP) No change - BRONZE IV\nDheAbyss - BRONZE IV (42 LP) No change - BRONZE IV\nLNK GuyNow - SILVER II (2 LP) No change - SILVER II\nTK HYDRA - SILVER IV (97 LP) No change - SILVER IV\nLord Loyesco - SILVER IV (61 LP) No change - SILVER IV\nKingmaker - SILVER IV (32 LP) +32 LP\nK3 Teedawt - SILVER IV (0 LP) No change - SILVER IV\nTE XxRuina - GOLD I (15 LP) No change - GOLD I\nShegz - GOLD II (86 LP) No change - GOLD II\nnovas3nsei - GOLD II (10 LP) No change - GOLD II\nrileybash - GOLD IV (64 LP) +33 LP\nZanbacto - GOLD IV (0 LP) No change - GOLD IV\nMonteng - PLATINUM II (8 LP) -50 LP\nSRM Silverfangs - PLATINUM IV (53 LP) No change - PLATINUM IV",
+  "timestamp": "2025-07-25_13-13-42",
+  "changes": [
+    {
+      "summ_id": "Shegz",
+      "queue": "Solo/Duo Queue",
+      "tier": "PLATINUM III",
+      "lp": 16,
+      "change": "No change - PLATINUM III"
+    },
+    {
+      "summ_id": "Shegz",
+      "queue": "Flex Queue",
+      "tier": "GOLD II",
+      "lp": 86,
+      "change": "No change - GOLD II"
+    },
+    {
+      "summ_id": "TK SavageMummy",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD II",
+      "lp": 34,
+      "change": "-51 LP"
+    },
+    {
+      "summ_id": "TK SavageMummy",
+      "queue": "Flex Queue",
+      "tier": "BRONZE IV",
+      "lp": 64,
+      "change": "No change - BRONZE IV"
+    },
+    {
+      "summ_id": "TK friendly",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD III",
+      "lp": 35,
+      "change": "+26 LP"
+    },
+    {
+      "summ_id": "TK friendly",
+      "queue": "Flex Queue",
+      "tier": "BRONZE IV",
+      "lp": 66,
+      "change": "No change - BRONZE IV"
+    },
+    {
+      "summ_id": "FaultySwitch",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER II",
+      "lp": 73,
+      "change": "No change - SILVER II"
+    },
+    {
+      "summ_id": "FaultySwitch",
+      "queue": "Flex Queue",
+      "tier": "BRONZE II",
+      "lp": 24,
+      "change": "No change - BRONZE II"
+    },
+    {
+      "summ_id": "SLY LOKi",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER IV",
+      "lp": 0,
+      "change": "No change - SILVER IV"
+    },
+    {
+      "summ_id": "SLY LOKi",
+      "queue": "Flex Queue",
+      "tier": "IRON III",
+      "lp": 31,
+      "change": "No change - IRON III"
+    },
+    {
+      "summ_id": "MenoGrande",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER III",
+      "lp": 94,
+      "change": "No change - SILVER III"
+    },
+    {
+      "summ_id": "Drowsytroll",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE IV",
+      "lp": 25,
+      "change": "No change - BRONZE IV"
+    },
+    {
+      "summ_id": "Endar",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 58,
+      "change": "No change - GOLD IV"
+    },
+    {
+      "summ_id": "Endar",
+      "queue": "Flex Queue",
+      "tier": "BRONZE II",
+      "lp": 84,
+      "change": "No change - BRONZE II"
+    },
+    {
+      "summ_id": "rileybash",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 70,
+      "change": "No change - GOLD IV"
+    },
+    {
+      "summ_id": "rileybash",
+      "queue": "Flex Queue",
+      "tier": "GOLD IV",
+      "lp": 64,
+      "change": "+33 LP"
+    },
+    {
+      "summ_id": "Lord Loyesco",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD I",
+      "lp": 29,
+      "change": "No change - GOLD I"
+    },
+    {
+      "summ_id": "Lord Loyesco",
+      "queue": "Flex Queue",
+      "tier": "SILVER IV",
+      "lp": 61,
+      "change": "No change - SILVER IV"
+    },
+    {
+      "summ_id": "DC Nalphstein",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE IV",
+      "lp": 9,
+      "change": "No change - BRONZE IV"
+    },
+    {
+      "summ_id": "DC Nalphstein",
+      "queue": "Flex Queue",
+      "tier": "BRONZE III",
+      "lp": 28,
+      "change": "No change - BRONZE III"
+    },
+    {
+      "summ_id": "TK HYDRA",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE IV",
+      "lp": 20,
+      "change": "No change - BRONZE IV"
+    },
+    {
+      "summ_id": "TK HYDRA",
+      "queue": "Flex Queue",
+      "tier": "SILVER IV",
+      "lp": 97,
+      "change": "No change - SILVER IV"
+    },
+    {
+      "summ_id": "Versatile",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD III",
+      "lp": 36,
+      "change": "No change - GOLD III"
+    },
+    {
+      "summ_id": "Versatile",
+      "queue": "Flex Queue",
+      "tier": "BRONZE I",
+      "lp": 39,
+      "change": "No change - BRONZE I"
+    },
+    {
+      "summ_id": "Sadme17",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 97,
+      "change": "No change - GOLD IV"
+    },
+    {
+      "summ_id": "Sadme17",
+      "queue": "Flex Queue",
+      "tier": "BRONZE II",
+      "lp": 3,
+      "change": "No change - BRONZE II"
+    },
+    {
+      "summ_id": "K3 Teedawt",
+      "queue": "Solo/Duo Queue",
+      "tier": "IRON I",
+      "lp": 90,
+      "change": "No change - IRON I"
+    },
+    {
+      "summ_id": "K3 Teedawt",
+      "queue": "Flex Queue",
+      "tier": "SILVER IV",
+      "lp": 0,
+      "change": "No change - SILVER IV"
+    },
+    {
+      "summ_id": "KT PapaChiibs ",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE II",
+      "lp": 53,
+      "change": "No change - BRONZE II"
+    },
+    {
+      "summ_id": "TE XxRuina",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD III",
+      "lp": 47,
+      "change": "No change - GOLD III"
+    },
+    {
+      "summ_id": "TE XxRuina",
+      "queue": "Flex Queue",
+      "tier": "GOLD I",
+      "lp": 15,
+      "change": "No change - GOLD I"
+    },
+    {
+      "summ_id": "NigerianFaker",
+      "queue": "Solo/Duo Queue",
+      "tier": "PLATINUM IV",
+      "lp": 40,
+      "change": "No change - PLATINUM IV"
+    },
+    {
+      "summ_id": "NigerianFaker",
+      "queue": "Flex Queue",
+      "tier": "BRONZE II",
+      "lp": 87,
+      "change": "No change - BRONZE II"
+    },
+    {
+      "summ_id": "KT PapaChibs",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE III",
+      "lp": 8,
+      "change": "+1 LP - PROMOTED from IRON to BRONZE"
+    },
+    {
+      "summ_id": "TK NigerianPluto",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 0,
+      "change": "No change - GOLD IV"
+    },
+    {
+      "summ_id": "TK NigerianPluto",
+      "queue": "Flex Queue",
+      "tier": "IRON III",
+      "lp": 16,
+      "change": "No change - IRON III"
+    },
+    {
+      "summ_id": "ggrandfatherr",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER IV",
+      "lp": 7,
+      "change": "No change - SILVER IV"
+    },
+    {
+      "summ_id": "ggrandfatherr",
+      "queue": "Flex Queue",
+      "tier": "IRON I",
+      "lp": 73,
+      "change": "No change - IRON I"
+    },
+    {
+      "summ_id": "Jjice222",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER III",
+      "lp": 76,
+      "change": "+46 LP"
+    },
+    {
+      "summ_id": "Jjice222",
+      "queue": "Flex Queue",
+      "tier": "IRON I",
+      "lp": 89,
+      "change": "No change - IRON I"
+    },
+    {
+      "summ_id": "SRM Kanedi",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE II",
+      "lp": 86,
+      "change": "+18 LP"
+    },
+    {
+      "summ_id": "Kingmaker",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 71,
+      "change": "No change - GOLD IV"
+    },
+    {
+      "summ_id": "Kingmaker",
+      "queue": "Flex Queue",
+      "tier": "SILVER IV",
+      "lp": 32,
+      "change": "+32 LP"
+    },
+    {
+      "summ_id": "DLR JOSH",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE II",
+      "lp": 61,
+      "change": "No change - BRONZE II"
+    },
+    {
+      "summ_id": "DLR JOSH",
+      "queue": "Flex Queue",
+      "tier": "IRON I",
+      "lp": 39,
+      "change": "No change - IRON I"
+    },
+    {
+      "summ_id": "OTPStormbringer",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 0,
+      "change": "No change - GOLD IV"
+    },
+    {
+      "summ_id": "LustyKami",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE III",
+      "lp": 21,
+      "change": "-13 LP"
+    },
+    {
+      "summ_id": "AJsBigBackClock",
+      "queue": "Solo/Duo Queue",
+      "tier": "DIAMOND II",
+      "lp": 10,
+      "change": "No change - DIAMOND II"
+    },
+    {
+      "summ_id": "Dr backshots MD",
+      "queue": "Solo/Duo Queue",
+      "tier": "PLATINUM II",
+      "lp": 85,
+      "change": "No change - PLATINUM II"
+    },
+    {
+      "summ_id": "Jueviol",
+      "queue": "Solo/Duo Queue",
+      "tier": "IRON II",
+      "lp": 78,
+      "change": "-4 LP"
+    },
+    {
+      "summ_id": "Jueviol",
+      "queue": "Flex Queue",
+      "tier": "IRON III",
+      "lp": 20,
+      "change": "No change - IRON III"
+    },
+    {
+      "summ_id": "Monteng",
+      "queue": "Solo/Duo Queue",
+      "tier": "PLATINUM IV",
+      "lp": 14,
+      "change": "No change - PLATINUM IV"
+    },
+    {
+      "summ_id": "Monteng",
+      "queue": "Flex Queue",
+      "tier": "PLATINUM II",
+      "lp": 8,
+      "change": "-50 LP"
+    },
+    {
+      "summ_id": "BURNTDODO",
+      "queue": "Flex Queue",
+      "tier": "BRONZE I",
+      "lp": 76,
+      "change": "No change - BRONZE I"
+    },
+    {
+      "summ_id": "Nigerian King",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD III",
+      "lp": 64,
+      "change": "No change - GOLD III"
+    },
+    {
+      "summ_id": "novas3nsei",
+      "queue": "Solo/Duo Queue",
+      "tier": "PLATINUM III",
+      "lp": 69,
+      "change": "No change - PLATINUM III"
+    },
+    {
+      "summ_id": "novas3nsei",
+      "queue": "Flex Queue",
+      "tier": "GOLD II",
+      "lp": 10,
+      "change": "No change - GOLD II"
+    },
+    {
+      "summ_id": "Villanelle",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 25,
+      "change": "No change - GOLD IV"
+    },
+    {
+      "summ_id": "LNK GuyNow",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER IV",
+      "lp": 85,
+      "change": "No change - SILVER IV"
+    },
+    {
+      "summ_id": "LNK GuyNow",
+      "queue": "Flex Queue",
+      "tier": "SILVER II",
+      "lp": 2,
+      "change": "No change - SILVER II"
+    },
+    {
+      "summ_id": "marvyiscool",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE III",
+      "lp": 33,
+      "change": "-50 LP"
+    },
+    {
+      "summ_id": "nawtydog",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER II",
+      "lp": 1,
+      "change": "No change - SILVER II"
+    },
+    {
+      "summ_id": "Nigerian Lotus",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE III",
+      "lp": 8,
+      "change": "No change - BRONZE III"
+    },
+    {
+      "summ_id": "SRM Silverfangs",
+      "queue": "Solo/Duo Queue",
+      "tier": "PLATINUM II",
+      "lp": 14,
+      "change": "No change - PLATINUM II"
+    },
+    {
+      "summ_id": "SRM Silverfangs",
+      "queue": "Flex Queue",
+      "tier": "PLATINUM IV",
+      "lp": 53,
+      "change": "No change - PLATINUM IV"
+    },
+    {
+      "summ_id": "TE PrismoO",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER I",
+      "lp": 62,
+      "change": "No change - SILVER I"
+    },
+    {
+      "summ_id": "TheStarOfMorning",
+      "queue": "Solo/Duo Queue",
+      "tier": "EMERALD I",
+      "lp": 18,
+      "change": "No change - EMERALD I"
+    },
+    {
+      "summ_id": "Zanbacto",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 0,
+      "change": "No change - GOLD IV"
+    },
+    {
+      "summ_id": "Zanbacto",
+      "queue": "Flex Queue",
+      "tier": "GOLD IV",
+      "lp": 0,
+      "change": "No change - GOLD IV"
+    },
+    {
+      "summ_id": "Rahzzcal",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER II",
+      "lp": 81,
+      "change": "+67 LP"
+    },
+    {
+      "summ_id": "DheAbyss",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD IV",
+      "lp": 0,
+      "change": "No change - GOLD IV"
+    },
+    {
+      "summ_id": "DheAbyss",
+      "queue": "Flex Queue",
+      "tier": "BRONZE IV",
+      "lp": 42,
+      "change": "No change - BRONZE IV"
+    },
+    {
+      "summ_id": "Khanedi ",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER IV",
+      "lp": 98,
+      "change": "No change - SILVER IV"
+    },
+    {
+      "summ_id": "Drowsytroll",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE IV",
+      "lp": 25,
+      "change": "No change - BRONZE IV"
+    },
+    {
+      "summ_id": "Godstime",
+      "queue": "Solo/Duo Queue",
+      "tier": "IRON II",
+      "lp": 77,
+      "change": "No change - IRON II"
+    }
+  ],
+  "top_changes": [
+    {
+      "rank": 1,
+      "summ_id": "Rahzzcal",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER II",
+      "lp": 81,
+      "change": "+67 LP",
+      "absolute_change": 67
+    },
+    {
+      "rank": 2,
+      "summ_id": "TK SavageMummy",
+      "queue": "Solo/Duo Queue",
+      "tier": "GOLD II",
+      "lp": 34,
+      "change": "-51 LP",
+      "absolute_change": 51
+    },
+    {
+      "rank": 3,
+      "summ_id": "Monteng",
+      "queue": "Flex Queue",
+      "tier": "PLATINUM II",
+      "lp": 8,
+      "change": "-50 LP",
+      "absolute_change": 50
+    },
+    {
+      "rank": 4,
+      "summ_id": "marvyiscool",
+      "queue": "Solo/Duo Queue",
+      "tier": "BRONZE III",
+      "lp": 33,
+      "change": "-50 LP",
+      "absolute_change": 50
+    },
+    {
+      "rank": 5,
+      "summ_id": "Jjice222",
+      "queue": "Solo/Duo Queue",
+      "tier": "SILVER III",
+      "lp": 76,
+      "change": "+46 LP",
+      "absolute_change": 46
+    }
+  ]
+}
