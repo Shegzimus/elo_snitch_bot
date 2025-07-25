@@ -27,7 +27,7 @@ dotenv.config({ path: envPath });
 console.log('WHATSAPP_GROUP_ID:', process.env.WHATSAPP_GROUP_ID ? 'Set' : 'Not set');
 
 // Test message
-const testMessage = "*ELO SNITCH BOT ONLINE*\n\nI'm ready to help you track ELO changes and snitch on these hoes! Available commands:\n\n!elocheck - Shows full ELO changes list\n!winrate - Shows winrate list\n\nType any command to get started!";
+const testMessage = "*ELO SNITCH BOT ONLINE*\n\nAvailable commands:\n\n!elocheck - Shows full ELO changes list\n!winrate - Shows winrate list\n!topelo - Shows top 5 ELO changes\nType any command to get started!";
 
 // Initialize the client with LocalAuth for session persistence
 console.log('Initializing WhatsApp client...');
