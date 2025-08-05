@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 
 # Define the path to the .env file from the project root directory
 env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "config", ".env"))
@@ -86,7 +86,8 @@ def create_google_sheets_service(credentials_path: str)-> object:
 
 def fetch_google_sheet_data(
         range_name: str = "Form Responses 1!A:D", 
-        credentials_path: str = None
+        credentials_path: str = None,
+        sort_by_timestamp: bool = True
     ) -> pd.DataFrame:
     
     sheet_id:str = os.getenv("google_sheet_id")
@@ -140,33 +141,58 @@ def fetch_google_sheet_data(
 
     values_df['timestamp'] = pd.to_datetime(values_df['timestamp'], errors='coerce')  # Convert timestamp to datetime
     values_df['player_tag'] = values_df['player_tag'].str.lstrip("#")  # Strip '#' from player_tag
+    values_df['puuid'] = None
+    
+    # Sort by timestamp to ensure we process in chronological order
+    if sort_by_timestamp and 'timestamp' in values_df.columns:
+        values_df = values_df.sort_values('timestamp')
 
     return values_df
 
-def load_to_db(df: pd.DataFrame, table_name: str, db_connection:object= engine) -> None:   # using a connection object argument instead of a hard-coded engine in case we want to use a cloud database in the future
-    if df.empty:
-        print("No data to load.")
-        return
+def get_latest_timestamp(db_connection: object, table_name: str) -> pd.Timestamp:
+    """Get the most recent timestamp from the database."""
+    with db_connection.connect() as conn:
+        # Use text() to properly format the SQL query
+        query = text(f"SELECT MAX(timestamp) FROM {table_name}")
+        result = conn.execute(query)
+        latest_timestamp = result.scalar()
+        return pd.to_datetime(latest_timestamp) if latest_timestamp else None
+
+def load_to_db(df: pd.DataFrame, table_name: str, db_connection: object = engine):
+    """Load data to the database, appending only new records."""
+    # Check if table exists and get latest timestamp
+    with db_connection.connect() as conn:
+        # First check if table exists using SQLAlchemy's inspection
+        inspector = db_connection.dialect.has_table(conn, table_name, schema='public')
+        table_exists = bool(inspector)
     
-    df.head(0).to_sql(name=table_name, con=db_connection, if_exists='replace')
-    print("Table header created successfully")
-
-    df.to_sql(name=table_name, con=db_connection, if_exists='replace')
-
-    return None
+    if table_exists:
+        # Get only new entries
+        latest_timestamp = get_latest_timestamp(db_connection, table_name)
+        if latest_timestamp:
+            df = df[df['timestamp'] > latest_timestamp]
+            
+            if df.empty:
+                print("No new entries to add.")
+                return
+    
+    # Load to database
+    df.to_sql(
+        name=table_name,
+        con=db_connection,
+        if_exists='append' if table_exists else 'replace',
+        index=False
+    )
+    print(f"Successfully added {len(df)} new entries to {table_name} table.")
 
 def main():
     df = fetch_google_sheet_data()
-    if df.empty:
-        print("No data fetched from Google Sheets.")
-    else:
-        print("Data fetched successfully.")
-        print(df)
-        load_to_db(df, table_name="form_responses", db_connection=engine)  # Load to database
-
-
-
-
+    if df is None or df.empty:
+        print("No data was fetched from Google Sheets.")
+        return
+        
+    print(f"Fetched {len(df)} total entries from Google Sheets.")
+    load_to_db(df, table_name="form_responses_2", db_connection=engine)
 
 
 if __name__ == "__main__":
