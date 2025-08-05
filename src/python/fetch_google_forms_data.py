@@ -181,7 +181,7 @@ def load_to_db(df: pd.DataFrame, table_name: str, db_connection: object = engine
         name=table_name,
         con=db_connection,
         if_exists='append' if table_exists else 'replace',
-        index=False
+        index=True
     )
     print(f"Successfully added {len(df)} new entries to {table_name} table.")
 
