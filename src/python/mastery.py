@@ -5,7 +5,9 @@ import pandas as pd
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 
-load_dotenv()
+# Load environment variables
+load_dotenv(dotenv_path=os.path.join("config", ".env"))
+
 # Create a database connection
 engine:object = create_engine("postgresql://root:root@localhost:5432/snitch_bot_db")
 
