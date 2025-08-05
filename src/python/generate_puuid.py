@@ -2,74 +2,112 @@ import requests
 import os
 import pandas as pd
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
+from typing import Dict, Optional, Tuple
 
-load_dotenv(dotenv_path="config/.env")
-# Create a database connection
+# Load environment variables
+load_dotenv(dotenv_path=os.path.join("config", ".env"))
+
+# Database connection
 engine = create_engine("postgresql://root:root@localhost:5432/snitch_bot_db")
 
 
-def fetch_player_data(db_connection: object) -> pd.DataFrame:
-    with db_connection.connect() as connection:
-        df = pd.read_sql(
-            "SELECT index AS id, " \
-            "summ_id AS summoner_name, " \
-            "player_tag as tag FROM public.form_responses", 
-            connection, 
-            index_col='id')
-        return df
+def fetch_player_data() -> pd.DataFrame:
+    """Fetch player data including existing puuids if available."""
+    query = """
+    SELECT 
+        index AS id,
+        summ_id AS summoner_name,
+        player_tag AS tag,
+        puuid
+    FROM public.form_responses_2
+    """
+    with engine.connect() as connection:
+        return pd.read_sql(query, connection, index_col='id')
 
-# REF: https://developer.riotgames.com/apis#account-v1/GET_getByRiotId
-def get_puuid() -> dict:
-    id_puuid_map = {}  # Dictionary to store id and puuid mapping
-    api_key = os.getenv("riot_api_key")
+
+def update_puuid_in_db(player_id: int, puuid: str) -> None:
+    """Update a player's puuid in the database."""
+    with engine.begin() as connection:
+        connection.execute(
+            text("UPDATE form_responses_2 SET puuid = :puuid WHERE index = :id"),
+            {"puuid": puuid, "id": player_id}
+        )
+
+
+def get_puuid_from_riot(summoner_name: str, tag: str, api_key: str) -> Optional[str]:
+    """Get puuid from Riot API using summoner name and tag."""
+    url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{summoner_name}/{tag}"
+    headers = {"X-Riot-Token": api_key}
     
-    if not api_key and not os.path.exists("config/.env"):
-        raise ValueError("API key is not set in environment variables or .env file is missing.")
-    if not api_key:
-        raise ValueError("API key is not set in environment variables.")
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        if response.status_code == 200:
+            return response.json().get("puuid")
+        print(f"API Error for {summoner_name}#{tag}: {response.status_code} - {response.text}")
+    except requests.RequestException as e:
+        print(f"Request failed for {summoner_name}#{tag}: {e}")
+    
+    return None
 
-    df = fetch_player_data(db_connection=engine)
+
+def process_players() -> Dict[int, str]:
+    """Process all players, updating puuids as needed."""
+    api_key = os.getenv("RIOT_API_KEY") or os.getenv("riot_api_key")
+    if not api_key:
+        raise ValueError("Riot API key not found in environment variables.")
+
+    df = fetch_player_data()
     if df.empty:
         print("No player data found.")
-        return {}  # Return empty dict instead of None
+        return {}
 
-    for idx, row in df.iterrows():
-        id_val = idx  # Renamed from 'id' to avoid shadowing built-in
+    puuid_map = {}
+    updated_count = 0
+    
+    for player_id, row in df.iterrows():
         summoner_name = row['summoner_name']
         tag = row['tag']
-
-        url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{summoner_name}/{tag}?api_key={api_key}"
-        headers = {"X-Riot-Token": api_key}
-        try:
-            response = requests.get(url, headers=headers)
+        existing_puuid = row.get('puuid')
+        
+        # Skip if we already have a valid puuid for this player
+        if pd.notna(existing_puuid) and existing_puuid:
+            puuid_map[player_id] = existing_puuid
+            continue
             
-            if response.status_code == 200:
-                data = response.json()
-                puuid = data.get("puuid")
-                id_puuid_map[id_val] = puuid
-            else:
-                print(f"Failed for ID: {id_val}, Status code: {response.status_code}, Response: {response.text}")
-                id_puuid_map[id_val] = None
-                
-        except requests.RequestException as e:
-            print(f"Request failed for ID: {id_val}, Error: {e}")
-            id_puuid_map[id_val] = None
+        # Get puuid from Riot API
+        puuid = get_puuid_from_riot(summoner_name, tag, api_key)
+        if puuid:
+            puuid_map[player_id] = puuid
+            update_puuid_in_db(player_id, puuid)
+            updated_count += 1
+            print(f"Updated puuid for {summoner_name}#{tag}")
+        else:
+            print(f"Failed to get puuid for {summoner_name}#{tag}")
+            puuid_map[player_id] = None
+    
+    if updated_count > 0:
+        print(f"Updated {updated_count} player puuids.")
+    
+    return puuid_map
 
-    return id_puuid_map
 
 def main():
-    puuid_map = get_puuid()
-    if puuid_map:
-        print("PUUID Map:", puuid_map)
-    else:
-        print("No PUUIDs found.")
-    df = pd.DataFrame(list(puuid_map.items()), columns=['id', 'puuid'])
-    print(df)
+    print("Starting puuid update process...")
+    puuid_map = process_players()
     
-    df.head(0).to_sql(name="puuid", con=engine, if_exists='replace')
-    print("Table header created successfully")
+    if puuid_map:
+        print(f"Processed {len(puuid_map)} players.")
+        # Create a summary DataFrame for reporting
+        df = pd.DataFrame(
+            [(player_id, puuid) for player_id, puuid in puuid_map.items() if puuid],
+            columns=['player_id', 'puuid']
+        )
+        print("\nSummary of puuids:")
+        print(df)
+    else:
+        print("No players were processed.")
 
-    df.to_sql(name="puuid", con=engine, if_exists='replace')
+
 if __name__ == "__main__":
     main()
