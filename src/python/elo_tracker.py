@@ -362,8 +362,6 @@ def track_elo_changes() -> List[Dict[str, any]]:
     
     return all_changes
 
-
-
 def fetch_winrate()-> Tuple[List[Dict[str, any]], List[Dict[str, any]]]:
     wr_solo = []
     wr_flex = []
@@ -406,7 +404,7 @@ def fetch_winrate()-> Tuple[List[Dict[str, any]], List[Dict[str, any]]]:
         FROM filtered_scans
         WHERE queue_type = 'RANKED_SOLO_5x5'
         ORDER BY win_rate DESC;
-"""
+        """
         df: pd.DataFrame = pd.read_sql(query, connection)
 
         for _, row in df.iterrows():
@@ -431,8 +429,6 @@ def fetch_winrate()-> Tuple[List[Dict[str, any]], List[Dict[str, any]]]:
                 "win_rate": float(row['win_rate'])
             })
         return wr_solo, wr_flex
-
-
 
 def format_winrate_message(winrate_data: List[Dict[str, any]], queue_type: str = "Solo/Duo") -> str:
     """
@@ -464,43 +460,6 @@ def format_winrate_message(winrate_data: List[Dict[str, any]], queue_type: str =
         message += f"{player['summ_id']} - {tier_rank} ({win_rate} | {record})\n"
     
     return message
-
-
-# def format_elo_changes_message(changes: list) -> str:
-#     message = MESSAGE_HEADER
-    
-#     # Group changes by queue type
-#     queue_groups = {}
-#     for change in changes:
-#         queue = change['queue']
-#         if queue not in queue_groups:
-#             queue_groups[queue] = []
-#         queue_groups[queue].append(change)
-    
-#     # Format each queue group
-#     for queue, queue_changes in queue_groups.items():
-#         # Get the display name from QUEUE_TYPES, or use the queue value directly if not found
-#         queue_display = QUEUE_TYPES.get(queue, queue)
-#         message += f"*{queue_display}:*\n"
-        
-#         # Sort changes by tier and division
-#         queue_changes.sort(
-#             key=lambda x: (
-#                 get_tier_index(x['tier'].split()[0]),
-#                 get_division_index(x['tier'].split()[1]) if len(x['tier'].split()) > 1 else 0,
-#                 -x['lp']
-#             )
-#         )
-        
-#         for change in queue_changes:
-#             message += (
-#                 f"{change['summ_id']} - {change['tier']} ({change['lp']} LP) "
-#                 f"{change['change']}\n"
-#             )
-#         message += "\n"
-    
-#     return message.strip()
-
 
 def format_elo_changes_message(changes: list) -> str:
     """
