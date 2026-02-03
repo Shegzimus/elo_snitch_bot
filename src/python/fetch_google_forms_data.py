@@ -5,17 +5,14 @@ from googleapiclient.discovery import build
 import pandas as pd
 from sqlalchemy import create_engine, text
 
-# Define the path to the .env file from the project root directory
 env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "config", ".env"))
 
-# Check if .env file exists
 if not os.path.exists(env_path):
     raise FileNotFoundError(f"Could not find .env file at: {env_path}")
 
-# Load environment variables from .env file
 load_dotenv(dotenv_path=env_path, override=True)
 
-# Print all environment variables for debugging
+# FOR DEBUGGING
 # print("Environment variables:", os.environ)
 # print(f"Google Sheet ID from .env: {os.getenv('google_sheet_id')}")
 
@@ -36,20 +33,16 @@ def test_network_connectivity()-> None:
         try:
             print(f"\nTesting connection to {host}:{port}...")
             
-            # Create SSL context with modern settings
             context = ssl.create_default_context()
             context.check_hostname = True
             context.verify_mode = ssl.CERT_REQUIRED
             
-            # Test TCP connection
             with socket.create_connection((host, port), timeout=10) as sock:
                 print(f"TCP connection to {host}:{port} successful")
                 
-                # Test SSL handshake
                 with context.wrap_socket(sock, server_hostname=host) as ssock:
                     print(f"SSL handshake successful. Protocol: {ssock.version()}")
                     
-                    # Test HTTP request
                     request = f"GET {path} HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n"
                     ssock.sendall(request.encode())
                     response = ssock.recv(4096).decode()
@@ -64,20 +57,17 @@ def test_network_connectivity()-> None:
 def create_google_sheets_service(credentials_path: str)-> object:
     """Create and return an authorized Google Sheets API service instance."""
     try:
-        # Get the absolute path to the credentials file
         credentials_path = os.path.abspath(credentials_path)
         print(f"Using credentials from: {credentials_path}")
         
-        # Load the service account credentials
         creds = service_account.Credentials.from_service_account_file(
             credentials_path,
             scopes=['https://www.googleapis.com/auth/spreadsheets.readonly']
         )
         
-        # Build the service
         service = build('sheets', 'v4', credentials=creds, 
-                       cache_discovery=False,  # Avoids an unnecessary request
-                       static_discovery=False)  # Uses the discovery document from the package
+                       cache_discovery=False,  
+                       static_discovery=False)  
         
         return service
     except Exception as e:
@@ -95,14 +85,11 @@ def fetch_google_sheet_data(
     if not sheet_id:
         raise ValueError("Google Sheet ID is not set in environment variables.")
 
-    # Handle credentials path
     if not credentials_path:
-        # Default to .google/credentials.json in the project root
         credentials_path = os.path.abspath(os.path.join(
             os.path.dirname(__file__), "..", "..", ".google", "credentials.json"
         ))
     
-    # print(f"Looking for credentials at: {credentials_path}")
     if not os.path.exists(credentials_path):
         raise ValueError(
             f"Google Cloud credentials file not found at: {credentials_path}\n"
@@ -114,22 +101,17 @@ def fetch_google_sheet_data(
             f"5. Save the file as 'credentials.json' in the '.google' directory at: {os.path.dirname(credentials_path)}"
         )
 
-    # Define the required scope
     SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
-    # Load credentials from the service account file
     creds = service_account.Credentials.from_service_account_file(
         credentials_path, scopes=SCOPES)
 
-    # Build the Sheets API service
     service:object = build('sheets', 'v4', credentials=creds)
 
-    # Call the Sheets API
     sheet:object = service.spreadsheets()
     result:object = sheet.values().get(spreadsheetId=sheet_id, range=range_name).execute()
     values:list[list[str]] = result.get('values', [])
 
-    # Minor transformations
     values_df:pd.DataFrame = pd.DataFrame(values[1:], columns=values[0])  # Convert to DataFrame
     values_df.rename(columns={
         'index': 'id',
@@ -143,7 +125,6 @@ def fetch_google_sheet_data(
     values_df['player_tag'] = values_df['player_tag'].str.lstrip("#")  # Strip '#' from player_tag
     values_df['puuid'] = None
     
-    # Sort by timestamp to ensure we process in chronological order
     if sort_by_timestamp and 'timestamp' in values_df.columns:
         values_df = values_df.sort_values('timestamp')
 
@@ -151,8 +132,11 @@ def fetch_google_sheet_data(
 
 def get_latest_timestamp(db_connection: object, table_name: str) -> pd.Timestamp:
     """Get the most recent timestamp from the database."""
+    allowed_tables = {"form_responses", "form_responses_2", "elo_history", "mastery", "puuid"}
+    if table_name not in allowed_tables:
+        raise ValueError(f"Invalid table name: {table_name}")
+    
     with db_connection.connect() as conn:
-        # Use text() to properly format the SQL query
         query = text(f"SELECT MAX(timestamp) FROM {table_name}")
         result = conn.execute(query)
         latest_timestamp = result.scalar()
@@ -160,14 +144,11 @@ def get_latest_timestamp(db_connection: object, table_name: str) -> pd.Timestamp
 
 def load_to_db(df: pd.DataFrame, table_name: str, db_connection: object = engine):
     """Load data to the database, appending only new records."""
-    # Check if table exists and get latest timestamp
     with db_connection.connect() as conn:
-        # First check if table exists using SQLAlchemy's inspection
         inspector = db_connection.dialect.has_table(conn, table_name, schema='public')
         table_exists = bool(inspector)
     
     if table_exists:
-        # Get only new entries
         latest_timestamp = get_latest_timestamp(db_connection, table_name)
         if latest_timestamp:
             df = df[df['timestamp'] > latest_timestamp]
@@ -176,7 +157,6 @@ def load_to_db(df: pd.DataFrame, table_name: str, db_connection: object = engine
                 print("No new entries to add.")
                 return
     
-    # Load to database
     df.to_sql(
         name=table_name,
         con=db_connection,
@@ -197,10 +177,7 @@ def main():
 
 if __name__ == "__main__":
     try:
-        # Test network connectivity first
         test_network_connectivity()
-        
-        # Then run the main function
         main()
     except Exception as e:
         print(f"\n An error occurred: {str(e)}")
