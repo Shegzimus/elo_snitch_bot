@@ -5,11 +5,21 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 from typing import Dict, Optional, Tuple
 
-# Load environment variables
 load_dotenv(dotenv_path=os.path.join("config", ".env"))
 
-# Database connection
 engine = create_engine("postgresql://root:root@localhost:5432/snitch_bot_db")
+
+
+def ensure_puuid_table_exists() -> None:
+    """Ensure the puuid table exists in the database."""
+    with engine.begin() as connection:
+        connection.execute(text("""
+            CREATE TABLE IF NOT EXISTS public.puuid (
+                id INTEGER PRIMARY KEY, 
+                index INTEGER,
+                puuid TEXT
+            )
+        """))
 
 
 def fetch_player_data() -> pd.DataFrame:
@@ -26,8 +36,8 @@ def fetch_player_data() -> pd.DataFrame:
         return pd.read_sql(query, connection, index_col='id')
 
 
-def update_puuid_in_db(player_id: int, puuid: str) -> None:
-    """Update a player's puuid in the database."""
+def update_puuid_in_form_responses_2(player_id: int, puuid: str) -> None:
+    """Update a player's puuid in the form_responses_2 table."""
     with engine.begin() as connection:
         connection.execute(
             text("UPDATE form_responses_2 SET puuid = :puuid WHERE index = :id"),
@@ -70,16 +80,14 @@ def process_players() -> Dict[int, str]:
         tag = row['tag']
         existing_puuid = row.get('puuid')
         
-        # Skip if we already have a valid puuid for this player
         if pd.notna(existing_puuid) and existing_puuid:
             puuid_map[player_id] = existing_puuid
             continue
             
-        # Get puuid from Riot API
         puuid = get_puuid_from_riot(summoner_name, tag, api_key)
         if puuid:
             puuid_map[player_id] = puuid
-            update_puuid_in_db(player_id, puuid)
+            update_puuid_in_form_responses_2(player_id, puuid)
             updated_count += 1
             print(f"Updated puuid for {summoner_name}#{tag}")
         else:
@@ -94,11 +102,13 @@ def process_players() -> Dict[int, str]:
 
 def main():
     print("Starting puuid update process...")
+    
+    ensure_puuid_table_exists()
+    
     puuid_map = process_players()
     
     if puuid_map:
         print(f"Processed {len(puuid_map)} players.")
-        # Create a summary DataFrame for reporting
         df = pd.DataFrame(
             [(player_id, puuid) for player_id, puuid in puuid_map.items() if puuid],
             columns=['player_id', 'puuid']
