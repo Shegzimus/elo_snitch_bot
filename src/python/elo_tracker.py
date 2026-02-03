@@ -8,7 +8,6 @@ from typing import Tuple, Dict, List
 
 load_dotenv()
 
-# Create database connection
 engine = create_engine("postgresql://root:root@localhost:5432/snitch_bot_db")
 
 # Constants for message formatting
@@ -18,11 +17,9 @@ QUEUE_TYPES = {
     "RANKED_FLEX_SR": "Flex Queue"
 }
 
-# Helper function to format tier/rank
 def format_tier_rank(tier: str, rank: str)-> str:
     return f"{tier} {rank}" if rank else tier
 
-# Constants for tier and division order
 TIER_ORDER:list[str] = [
     "IRON",
     "BRONZE",
@@ -52,11 +49,9 @@ def create_daily_directory(folder: str)-> Tuple[str, str]:
     os.makedirs(daily_dir, exist_ok=True)
     return data_dir, daily_dir
     
-# Helper function to get tier index
 def get_tier_index(tier: str)-> int:
     return TIER_ORDER.index(tier)
 
-# Helper function to get division index
 def get_division_index(division: str)-> int:
     """
     Get division index where higher index = better division
@@ -66,7 +61,6 @@ def get_division_index(division: str)-> int:
         return 0
     return DIVISION_ORDER.index(division)
 
-# 2nd order helper function to calculate absolute ELO change value
 def calculate_absolute_change(change_str: str)-> int:
     """
     Calculate the absolute value of ELO change from change string
@@ -75,7 +69,6 @@ def calculate_absolute_change(change_str: str)-> int:
     if not change_str:
         return 0
     
-    # Extract LP change from string (first number with + or -)
     lp_str = change_str.split()[0]
     if lp_str.startswith("+") or lp_str.startswith("-"):
         try:
@@ -84,7 +77,6 @@ def calculate_absolute_change(change_str: str)-> int:
             return 0
     return 0
 
-# Function to get top N changes by absolute lp change
 def get_top_changes(changes: List[Dict[str, any]], n: int=5)-> List[Dict[str, any]]:
     """
     Get top N changes by absolute ELO change value
@@ -93,17 +85,13 @@ def get_top_changes(changes: List[Dict[str, any]], n: int=5)-> List[Dict[str, an
     if not changes:
         return []
     
-    # Calculate absolute change for each change
     for change in changes:
         change['absolute_change'] = calculate_absolute_change(change['change'])
     
-    # Sort changes by absolute change (descending)
     sorted_changes: list = sorted(changes, key=lambda x: x['absolute_change'], reverse=True)
     
-    # Get top N changes
     top_changes: list = sorted_changes[:n]
     
-    # Format top changes for display
     formatted_top = []
     for i, change in enumerate(top_changes, 1):
         formatted_top.append({
@@ -140,10 +128,8 @@ def calculate_elo_change(
             "total_change": f"+{new_lp} LP ({new_tier} {new_division if new_division else ''})"
         }
     
-    # Calculate LP change
     lp_change: int = new_lp - old_lp if old_lp is not None else new_lp
     
-    # Check for tier change
     old_tier_idx: int = get_tier_index(old_tier)
     new_tier_idx: int = get_tier_index(new_tier)
     
@@ -153,7 +139,6 @@ def calculate_elo_change(
     elif new_tier_idx < old_tier_idx:
         tier_change = "DEMOTED"
     
-    # Check for division change
     division_change = None
     division_change_type = None
     if old_tier == new_tier and old_division and new_division: # Skips division comparison if elo is MASTER and above
@@ -169,10 +154,8 @@ def calculate_elo_change(
             division_change = f"{old_division} → {new_division}"
             division_change_type = "DEMOTED"
         
-    # Format total change message
     change_parts = []
     
-    # Add LP change first
     if lp_change != 0:
         change_parts.append(f"{lp_change:+} LP")
     
@@ -190,9 +173,8 @@ def calculate_elo_change(
         else:
             change_parts.append(f"Demoted to Division {division_change}")
     
-    # Validate that the change makes logical sense
     if lp_change > 0 and division_change_type == "DEMOTED" and not tier_change:
-        # This shouldn't happen - gaining LP but getting demoted within same tier
+        # TO-DO: This shouldn't happen - gaining LP but getting demoted within same tier
         change_parts = [f"{lp_change:+} LP"]
     elif lp_change < 0 and division_change_type == "PROMOTED" and not tier_change:
         # Also shouldn't happen - losing LP but getting promoted within same tier
@@ -351,11 +333,9 @@ def track_elo_changes() -> List[Dict[str, any]]:
     
     all_changes = []
     
-    # Process each summoner
     for _, row in puuid_df.iterrows():
         summ_id = row['summ_id']
         
-        # Process each queue type for this summoner
         for queue_name, (current_df, previous_df) in queue_data.items():
             changes = process_queue_changes(summ_id, current_df, previous_df, queue_name)
             all_changes.extend(changes)
@@ -444,7 +424,6 @@ def format_winrate_message(winrate_data: List[Dict[str, any]], queue_type: str =
     if not winrate_data:
         return f"*{queue_type} Queue Win Rates:*\nNo win rate data available.\n"
     
-    # Sort alphabetically by summoner name
     winrate_data.sort(key=lambda x: x['summ_id'].lower())
     
     message = f"*{queue_type} Queue Win Rates:*\n"
@@ -535,29 +514,22 @@ def convert_to_python_types(data: List[Dict[str, any]], is_top_changes: bool = F
     return result
 
 def main()->None:
-    # Track ELO changes
     changes = track_elo_changes()
 
-    # Track winrate
     wr_solo, wr_flex = fetch_winrate()
     
     if changes:
         # Format message for WhatsApp bot
         message = format_elo_changes_message(changes)
         
-        # Convert pandas types to Python types
         python_changes = convert_to_python_types(changes)
         
-        # Calculate and convert top changes
         top_changes = get_top_changes(changes, 5)
         python_top_changes = convert_to_python_types(top_changes, is_top_changes=True)
         
-        # Get current date and time
         date_str, timestamp = get_current_date_time()
     
-        # Create daily directory if it doesn't exist
         data_dir, daily_dir = create_daily_directory("elo_changes")
-        # Create a symlink to the latest file
         latest_path = os.path.join(data_dir, "latest.json")
         
         # Save message to file in daily directory
@@ -572,7 +544,6 @@ def main()->None:
                 "top_changes": python_top_changes
             }, f, indent=2)
         
-        # Create or update symlink to latest file
         try:
             if os.path.exists(latest_path):
                 os.remove(latest_path)
