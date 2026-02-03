@@ -145,6 +145,46 @@ client.on('error', (err) => {
     console.error('Client error:', err);
 });
 
+// Caching mechanism for frequently accessed data
+const dataCache = new Map();
+const CACHE_TTL = 300000; // 5 minutes in milliseconds
+
+function getCacheKey(type) {
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
+    return `${type}_${dateStr}`;
+}
+
+function isCacheValid(cacheEntry) {
+    return cacheEntry && (Date.now() - cacheEntry.timestamp < CACHE_TTL);
+}
+
+function setCacheData(key, data) {
+    dataCache.set(key, {
+        data: data,
+        timestamp: Date.now()
+    });
+}
+
+function getCacheData(key) {
+    const cacheEntry = dataCache.get(key);
+    if (isCacheValid(cacheEntry)) {
+        return cacheEntry.data;
+    }
+    // Remove expired cache entry
+    dataCache.delete(key);
+    return null;
+}
+
+function clearExpiredCache() {
+    const now = Date.now();
+    for (const [key, entry] of dataCache.entries()) {
+        if (now - entry.timestamp >= CACHE_TTL) {
+            dataCache.delete(key);
+        }
+    }
+}
+
 // Rate limiting for message processing
 const userMessageCache = new Map();
 const RATE_LIMIT_WINDOW = 60000; // 1 minute in milliseconds
@@ -221,6 +261,14 @@ process.on('unhandledRejection', (reason, promise) => {
 async function getLatestEloFile() {
     const eloChangesDir = '../../data/elo_changes';
     
+    // Check cache first
+    const cacheKey = getCacheKey('elo_file');
+    const cachedFile = getCacheData(cacheKey);
+    if (cachedFile) {
+        console.log('Using cached ELO file path');
+        return cachedFile;
+    }
+    
     try {
         if (!fsSync.existsSync(eloChangesDir)) {
             console.log('ELO changes directory does not exist:', eloChangesDir);
@@ -253,7 +301,12 @@ async function getLatestEloFile() {
         }
         
         const latestFile = jsonFiles.sort().pop();
-        return path.join(latestFolderPath, latestFile);
+        const filePath = path.join(latestFolderPath, latestFile);
+        
+        // Cache the result
+        setCacheData(cacheKey, filePath);
+        
+        return filePath;
     } catch (error) {
         console.error('Error in getLatestEloFile:', error);
         return null;
@@ -262,6 +315,14 @@ async function getLatestEloFile() {
 
 async function getLatestWinrateFile() {
     const winrateDir = '../../data/winrate/solo';
+    
+    // Check cache first
+    const cacheKey = getCacheKey('winrate_file');
+    const cachedFile = getCacheData(cacheKey);
+    if (cachedFile) {
+        console.log('Using cached winrate file path');
+        return cachedFile;
+    }
     
     try {
         if (!fsSync.existsSync(winrateDir)) {
@@ -297,7 +358,12 @@ async function getLatestWinrateFile() {
         }
         
         const latestFile = winrateFiles.sort().pop();
-        return path.join(latestFolderPath, latestFile);
+        const filePath = path.join(latestFolderPath, latestFile);
+        
+        // Cache the result
+        setCacheData(cacheKey, filePath);
+        
+        return filePath;
     } catch (error) {
         console.error('Error in getLatestWinrateFile:', error);
         return null;
@@ -450,6 +516,11 @@ client.on('message', async message => {
         try {
             const fileContent = await fs.readFile(latestFile, 'utf8');
             const data = JSON.parse(fileContent);
+            
+            // Cache the parsed data
+            const dataCacheKey = getCacheKey('elo_data');
+            setCacheData(dataCacheKey, data);
+            
             const formattedMessage = formatTopChanges(data);
             await message.reply(formattedMessage);
             console.log('Sent topelo response');
@@ -468,8 +539,18 @@ client.on('message', async message => {
         }
 
         try {
-            const fileContent = await fs.readFile(latestFile, 'utf8');
-            const data = JSON.parse(fileContent);
+            // Check cache for parsed data first
+            const dataCacheKey = getCacheKey('elo_data');
+            let data = getCacheData(dataCacheKey);
+            
+            if (!data) {
+                const fileContent = await fs.readFile(latestFile, 'utf8');
+                data = JSON.parse(fileContent);
+                setCacheData(dataCacheKey, data);
+            } else {
+                console.log('Using cached ELO data');
+            }
+            
             const formattedMessage = formatFullChanges(data);
             await message.reply(formattedMessage);
             console.log('Sent elocheck response');
@@ -488,8 +569,18 @@ client.on('message', async message => {
         }
 
         try {
-            const fileContent = await fs.readFile(latestFile, 'utf8');
-            const data = JSON.parse(fileContent);
+            // Check cache for parsed data first
+            const dataCacheKey = getCacheKey('winrate_data');
+            let data = getCacheData(dataCacheKey);
+            
+            if (!data) {
+                const fileContent = await fs.readFile(latestFile, 'utf8');
+                data = JSON.parse(fileContent);
+                setCacheData(dataCacheKey, data);
+            } else {
+                console.log('Using cached winrate data');
+            }
+            
             const formattedMessage = formatWinrate(data);
             await message.reply(formattedMessage);
             console.log('Sent winrate response');
@@ -499,6 +590,9 @@ client.on('message', async message => {
         }
     }
 });
+
+// Clean up expired cache entries every 5 minutes
+setInterval(clearExpiredCache, CACHE_TTL);
 
 console.log('🔄 Initializing client...');
 client.initialize().catch(error => {
