@@ -145,6 +145,41 @@ client.on('error', (err) => {
     console.error('Client error:', err);
 });
 
+function validateMessage(message) {
+    if (!message || typeof message !== 'string') {
+        return false;
+    }
+    
+    // Check for potentially dangerous content
+    const dangerousPatterns = [
+        /<script/i,
+        /javascript:/i,
+        /on\w+\s*=/i,
+        /\$\{.*\}/,  // Template literals
+        /\x00/,       // Null bytes
+        /[\r\n]/,     // Newlines (prevent injection)
+    ];
+    
+    return !dangerousPatterns.some(pattern => pattern.test(message));
+}
+
+function validateCommand(command) {
+    const validCommands = ['!elocheck', '!winrate', '!topelo'];
+    return validCommands.includes(command.toLowerCase());
+}
+
+function sanitizeInput(input) {
+    if (!input || typeof input !== 'string') {
+        return '';
+    }
+    
+    return input
+        .replace(/[<>"']/g, '')  // Remove HTML brackets and quotes
+        .replace(/[\r\n]/g, '')   // Remove newlines
+        .trim()
+        .substring(0, 1000);      // Limit length
+}
+
 // Add process error handlers
 process.on('uncaughtException', (error) => {
     console.error('Uncaught Exception:', error);
@@ -351,7 +386,22 @@ function formatFullChanges(data) {
 client.on('message', async message => {
     console.log(`📨 Received message: ${message.body}`);
     
-    if (message.body.toLowerCase() === '!topelo') {
+    // Validate message content
+    if (!validateMessage(message.body)) {
+        console.warn('Invalid message content detected, ignoring');
+        return;
+    }
+    
+    // Sanitize and validate command
+    const sanitizedMessage = sanitizeInput(message.body);
+    const command = sanitizedMessage.toLowerCase().trim();
+    
+    if (!validateCommand(command)) {
+        // Only respond to valid commands, ignore others silently
+        return;
+    }
+    
+    if (command === '!topelo') {
         console.log('Processing !topelo command');
         const latestFile = await getLatestEloFile();
         if (!latestFile) {
@@ -371,7 +421,7 @@ client.on('message', async message => {
         }
     }
 
-    else if (message.body.toLowerCase() === '!elocheck') {
+    else if (command === '!elocheck') {
         console.log('Processing !elocheck command');
         const latestFile = await getLatestEloFile();
         if (!latestFile) {
@@ -391,7 +441,7 @@ client.on('message', async message => {
         }
     }
 
-    else if (message.body.toLowerCase() === '!winrate') {
+    else if (command === '!winrate') {
         console.log('Processing !winrate command');
         const latestFile = await getLatestWinrateFile();
         if (!latestFile) {
