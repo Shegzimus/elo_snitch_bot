@@ -2,6 +2,8 @@
 
 A data pipeline to track and report on the ELO progress of members of the League of Naija group chat using a combination of Airflow, Python, node.js, and WhatsApp Web API.
 
+On launch, members of the gc were able to type commands which generated a table of elo changes for each member of the group chat who had registered in a Google form I shared with them. My machine was prod. I should probably look for a cheap way to host.
+
 Developer hours wasted: [![wakatime](https://wakatime.com/badge/user/7bb4aa36-0e0a-4c8e-9ce5-180c23c37a37/project/3587c415-099d-40f9-afd5-0869b61cfe72.svg)](https://wakatime.com/badge/user/7bb4aa36-0e0a-4c8e-9ce5-180c23c37a37/project/3587c415-099d-40f9-afd5-0869b61cfe72)
 
 ## Prerequisites
