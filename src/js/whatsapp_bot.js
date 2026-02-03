@@ -1,6 +1,7 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
-const fs = require('fs');
+const fs = require('fs').promises;
+const fsSync = require('fs');
 const dotenv = require('dotenv');
 const path = require('path');
 
@@ -9,12 +10,12 @@ console.log("Starting ELO Snitch Bot...");
 
 // Ensure the .wwebjs_auth directory exists
 const authDir = path.join(__dirname, '.wwebjs_auth');
-if (!fs.existsSync(authDir)) {
-    fs.mkdirSync(authDir, { recursive: true });
+if (!fsSync.existsSync(authDir)) {
+    fsSync.mkdirSync(authDir, { recursive: true });
 }
 const envPath = path.resolve(__dirname, '../../config/.env');
 console.log('Looking for .env file at:', envPath);
-if (!fs.existsSync(envPath)) {
+if (!fsSync.existsSync(envPath)) {
     console.error('.env file not found at:', envPath);
     console.log('Please create the .env file with WHATSAPP_GROUP_ID');
     process.exit(1);
@@ -154,54 +155,67 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Rest of your functions (keeping them the same)
-function getLatestEloFile() {
+async function getLatestEloFile() {
     const eloChangesDir = '../../data/elo_changes';
     
     try {
-        if (!fs.existsSync(eloChangesDir)) {
+        if (!fsSync.existsSync(eloChangesDir)) {
             console.log('ELO changes directory does not exist:', eloChangesDir);
             return null;
         }
         
-        const folders = fs.readdirSync(eloChangesDir)
-            .filter(item => fs.statSync(`${eloChangesDir}/${item}`).isDirectory());
+        const items = await fs.readdir(eloChangesDir);
+        const folders = [];
+        
+        for (const item of items) {
+            const fullPath = path.join(eloChangesDir, item);
+            const stat = await fs.stat(fullPath);
+            if (stat.isDirectory()) {
+                folders.push(item);
+            }
+        }
         
         if (folders.length === 0) {
             return null;
         }
         
         const latestFolder = folders.sort().pop();
-        const latestFolderPath = `${eloChangesDir}/${latestFolder}`;
+        const latestFolderPath = path.join(eloChangesDir, latestFolder);
         
-        const files = fs.readdirSync(latestFolderPath)
-            .filter(file => file.endsWith('.json'));
+        const files = await fs.readdir(latestFolderPath);
+        const jsonFiles = files.filter(file => file.endsWith('.json'));
         
-        if (files.length === 0) {
+        if (jsonFiles.length === 0) {
             return null;
         }
         
-        const latestFile = files.sort().pop();
-        return `${latestFolderPath}/${latestFile}`;
+        const latestFile = jsonFiles.sort().pop();
+        return path.join(latestFolderPath, latestFile);
     } catch (error) {
         console.error('Error in getLatestEloFile:', error);
         return null;
     }
 }
 
-function getLatestWinrateFile() {
+async function getLatestWinrateFile() {
     const winrateDir = '../../data/winrate/solo';
     
     try {
-        if (!fs.existsSync(winrateDir)) {
+        if (!fsSync.existsSync(winrateDir)) {
             console.log('Winrate directory does not exist:', winrateDir);
             return null;
         }
         
-        const folders = fs.readdirSync(winrateDir)
-            .filter(item => {
-                const fullPath = path.join(winrateDir, item);
-                return fs.statSync(fullPath).isDirectory();
-            });
+        const items = await fs.readdir(winrateDir);
+        const folders = [];
+        
+        for (const item of items) {
+            const fullPath = path.join(winrateDir, item);
+            const stat = await fs.stat(fullPath);
+            if (stat.isDirectory()) {
+                folders.push(item);
+            }
+        }
         
         if (folders.length === 0) {
             console.error('No date folders found in winrate directory');
@@ -211,15 +225,15 @@ function getLatestWinrateFile() {
         const latestFolder = folders.sort().pop();
         const latestFolderPath = path.join(winrateDir, latestFolder);
         
-        const files = fs.readdirSync(latestFolderPath)
-            .filter(file => file.endsWith('.json') && file.startsWith('winrate_solo'));
+        const files = await fs.readdir(latestFolderPath);
+        const winrateFiles = files.filter(file => file.endsWith('.json') && file.startsWith('winrate_solo'));
         
-        if (files.length === 0) {
+        if (winrateFiles.length === 0) {
             console.error('No winrate JSON files found in', latestFolderPath);
             return null;
         }
         
-        const latestFile = files.sort().pop();
+        const latestFile = winrateFiles.sort().pop();
         return path.join(latestFolderPath, latestFile);
     } catch (error) {
         console.error('Error in getLatestWinrateFile:', error);
@@ -339,14 +353,15 @@ client.on('message', async message => {
     
     if (message.body.toLowerCase() === '!topelo') {
         console.log('Processing !topelo command');
-        const latestFile = getLatestEloFile();
+        const latestFile = await getLatestEloFile();
         if (!latestFile) {
             await message.reply('No ELO changes data available!');
             return;
         }
 
         try {
-            const data = JSON.parse(fs.readFileSync(latestFile, 'utf8'));
+            const fileContent = await fs.readFile(latestFile, 'utf8');
+            const data = JSON.parse(fileContent);
             const formattedMessage = formatTopChanges(data);
             await message.reply(formattedMessage);
             console.log('Sent topelo response');
@@ -358,14 +373,15 @@ client.on('message', async message => {
 
     else if (message.body.toLowerCase() === '!elocheck') {
         console.log('Processing !elocheck command');
-        const latestFile = getLatestEloFile();
+        const latestFile = await getLatestEloFile();
         if (!latestFile) {
             await message.reply('No ELO changes data available!');
             return;
         }
 
         try {
-            const data = JSON.parse(fs.readFileSync(latestFile, 'utf8'));
+            const fileContent = await fs.readFile(latestFile, 'utf8');
+            const data = JSON.parse(fileContent);
             const formattedMessage = formatFullChanges(data);
             await message.reply(formattedMessage);
             console.log('Sent elocheck response');
@@ -377,14 +393,15 @@ client.on('message', async message => {
 
     else if (message.body.toLowerCase() === '!winrate') {
         console.log('Processing !winrate command');
-        const latestFile = getLatestWinrateFile();
+        const latestFile = await getLatestWinrateFile();
         if (!latestFile) {
             await message.reply('No winrate data available!');
             return;
         }
 
         try {
-            const data = JSON.parse(fs.readFileSync(latestFile, 'utf8'));
+            const fileContent = await fs.readFile(latestFile, 'utf8');
+            const data = JSON.parse(fileContent);
             const formattedMessage = formatWinrate(data);
             await message.reply(formattedMessage);
             console.log('Sent winrate response');
