@@ -5,10 +5,8 @@ import pandas as pd
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 
-# Load environment variables
 load_dotenv(dotenv_path=os.path.join("config", ".env"))
 
-# Create a database connection
 engine:object = create_engine("postgresql://root:root@localhost:5432/snitch_bot_db")
 
 def fetch_puuid(db_connection: object) -> pd.DataFrame:
@@ -48,7 +46,6 @@ def mastery_check():
             if response.status_code == 200:
                 data = response.json()
                 
-                # Process each champion mastery entry
                 for item in data:
                     mastery_data.append({
                         'puuid': item['puuid'],
@@ -79,7 +76,6 @@ def mastery_check():
         except Exception as e:
             print(f"Unexpected error for PUUID: {puuid}, Error: {e}")
 
-    # Create DataFrame from collected data
     if mastery_data:
         mastery_df = pd.DataFrame(mastery_data)
         print(f"Mastery data fetched successfully. Total records: {len(mastery_df)}")
@@ -89,19 +85,13 @@ def mastery_check():
         return pd.DataFrame()
 
 def main():
-    mastery_data= mastery_check()
-    mastery_df = pd.DataFrame(mastery_data)
+    mastery_df = mastery_check()
     if not mastery_df.empty:
         mastery_df.to_sql(name="mastery", con=engine, if_exists='replace', index=False)
-
-    if not mastery_df.empty:
         print(mastery_df.head())
         print("Mastery data loaded successfully into the database.")
-
     else:
         print("No mastery or milestone data to load.")
-
-
 
 if __name__ == "__main__":
     main()
