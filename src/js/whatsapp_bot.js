@@ -145,6 +145,34 @@ client.on('error', (err) => {
     console.error('Client error:', err);
 });
 
+// Rate limiting for message processing
+const userMessageCache = new Map();
+const RATE_LIMIT_WINDOW = 60000; // 1 minute in milliseconds
+const MAX_MESSAGES_PER_WINDOW = 5; // Max 5 commands per minute per user
+
+function checkRateLimit(userId) {
+    const now = Date.now();
+    const userMessages = userMessageCache.get(userId) || [];
+    
+    // Remove messages older than the rate limit window
+    const recentMessages = userMessages.filter(timestamp => now - timestamp < RATE_LIMIT_WINDOW);
+    
+    if (recentMessages.length >= MAX_MESSAGES_PER_WINDOW) {
+        return false; // Rate limit exceeded
+    }
+    
+    // Add current message timestamp
+    recentMessages.push(now);
+    userMessageCache.set(userId, recentMessages);
+    
+    return true; // Allowed
+}
+
+function getUserId(message) {
+    // Use the author's ID as the unique identifier
+    return message.author || message.from || 'unknown';
+}
+
 function validateMessage(message) {
     if (!message || typeof message !== 'string') {
         return false;
@@ -385,6 +413,16 @@ function formatFullChanges(data) {
 
 client.on('message', async message => {
     console.log(`📨 Received message: ${message.body}`);
+    
+    // Get user ID for rate limiting
+    const userId = getUserId(message);
+    
+    // Check rate limit
+    if (!checkRateLimit(userId)) {
+        console.warn(`Rate limit exceeded for user: ${userId}`);
+        await message.reply('⚠️ Rate limit exceeded. Please wait before sending another command.');
+        return;
+    }
     
     // Validate message content
     if (!validateMessage(message.body)) {
