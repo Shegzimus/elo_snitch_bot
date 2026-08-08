@@ -129,6 +129,36 @@ The bot runs hourly and executes the following tasks in sequence:
 3. `elo_check.py` - Check current ELO for all players
 4. `elo_tracker.py` - Track and report ELO changes
 
+## Ports
+
+Two `.env` files, deliberately separate:
+
+| File | Read by | Purpose |
+|---|---|---|
+| `.env` (repo root) | docker compose only | host port substitution in `docker-compose.yaml` |
+| `config/.env` | the Python pipeline | Riot/Google credentials, DB connection |
+
+`POSTGRES_PORT` must be set to the same value in both, or the pipeline will
+connect to a different database than the one compose published.
+
+Defaults are `POSTGRES_PORT=5432` and `PGADMIN_PORT=5051`. Override in the root
+`.env` when another project already binds those.
+
+## pgAdmin
+
+Browse to `http://localhost:${PGADMIN_PORT}` and log in with
+`PGADMIN_DEFAULT_EMAIL` / `PGADMIN_DEFAULT_PASSWORD` from `config/pgadmin.env`.
+
+The `snitch_bot` server is preregistered from `config/pgadmin_servers.json`.
+Expanding it prompts once for the Postgres password (`POSTGRES_USER`'s password,
+`root` by default) — tick *Save Password* to be asked only once.
+
+Note that pgAdmin reads **only** `PGADMIN_*` variables. The `DB_HOST`/`DB_PORT`/
+`DB_USER`/`DB_PASS`/`DB_NAME` entries in `config/pgadmin.env` are inert; the
+connection is defined in `pgadmin_servers.json` instead. That file uses the
+compose service name `pgdatabase` and its **internal** port 5432, not the
+published host port.
+
 ## Troubleshooting
 
 - If you encounter Google API authentication issues, verify your credentials in the `.env` file

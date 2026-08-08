@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "snitch_bot",
+      "Group": "Servers",
+      "Host": "pgdatabase",
+      "Port": 5432,
+      "MaintenanceDB": "snitch_bot_db",
+      "Username": "root",
+      "SSLMode": "prefer",
+      "Comment": "Host/Port are the compose service name and its INTERNAL port, not the published one."
+    }
+  }
+}

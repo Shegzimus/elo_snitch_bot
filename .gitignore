@@ -26,3 +26,5 @@ config/pgadmin.env
 
 # Runtime logs
 logs/
+# Root .env is docker-compose substitution only, and is machine-specific
+/.env

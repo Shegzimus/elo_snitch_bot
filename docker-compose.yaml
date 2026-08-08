@@ -20,14 +20,24 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-  # pgadmin:
-  #   image: dpage/pgadmin4
-  #   env_file:
-  #     - pgadmin.env
-  #   ports:
-  #     - "8080:80"
-  #   depends_on:
-  #     - pgdatabase
+  pgadmin:
+    image: dpage/pgadmin4
+    env_file:
+      - config/pgadmin.env
+    environment:
+      # Preregisters the snitch_bot connection. pgAdmin only reads PGADMIN_*
+      # variables -- the DB_HOST/DB_USER/DB_PASS block in pgadmin.env is inert
+      # and does nothing, which is why pgAdmin used to open with no servers and
+      # make you add one by hand.
+      PGADMIN_SERVER_JSON_FILE: /pgadmin4/servers.json
+    volumes:
+      - "./config/pgadmin_servers.json:/pgadmin4/servers.json:ro"
+    # 8080 is taken by httpd (XAMPP/Apache) on this machine.
+    ports:
+      - "${PGADMIN_PORT:-5051}:80"
+    depends_on:
+      pgdatabase:
+        condition: service_healthy
 
   # airflow_postgres:
   #   image: postgres:15-alpine
