@@ -36,6 +36,14 @@ TIER_ORDER:list[str] = [
 
 DIVISION_ORDER:list[str] = ["IV", "III", "II", "I"]
 
+DIVISIONS_PER_TIER: int = 4
+LP_PER_DIVISION: int = 100
+LP_PER_TIER: int = DIVISIONS_PER_TIER * LP_PER_DIVISION
+
+# Master, Grandmaster and Challenger have no divisions and share one continuous
+# LP pool -- the upper two are percentile cutoffs, not separate LP ranges.
+APEX_TIERS: frozenset = frozenset({"MASTER", "GRANDMASTER", "CHALLENGER"})
+
 def get_current_date_time()-> Tuple[str, str]:
     now = datetime.now()
     date_str = now.strftime("%Y-%m-%d")
@@ -62,6 +70,8 @@ def write_snapshot(daily_path: str, latest_path: str, payload: Dict[str, any])->
             json.dump(payload, f, indent=2)
 
 def get_tier_index(tier: str)-> int:
+    if tier not in TIER_ORDER:
+        raise ValueError(f"Unknown tier: {tier!r}. Expected one of {TIER_ORDER}")
     return TIER_ORDER.index(tier)
 
 def get_division_index(division: str)-> int:
@@ -71,41 +81,57 @@ def get_division_index(division: str)-> int:
     """
     if division is None:
         return 0
+    if division not in DIVISION_ORDER:
+        raise ValueError(f"Unknown division: {division!r}. Expected one of {DIVISION_ORDER}")
     return DIVISION_ORDER.index(division)
 
-def calculate_absolute_change(change_str: str)-> int:
+def ladder_points(tier: str, division: str, lp: int)-> int:
+    """Absolute position on the ranked ladder, expressed in LP.
+
+    Riot's league_points restarts near zero on every promotion, so subtracting
+    two raw values reports a tier climb as a large loss: Gold I 98 LP ->
+    Platinum IV 4 LP looks like -94 LP when the player in fact gained 6. Mapping
+    both ends onto one monotonic scale first makes the difference mean what
+    people expect.
+
+    Apex tiers all use the Master base, so a Grandmaster on 100 LP correctly
+    outranks a Master on 90 rather than being pushed a whole tier above them.
+
+    A division spans 100 points, which makes "GOLD IV 100 LP" and "GOLD III
+    0 LP" score identically. That is deliberate: 100 LP is the promotion
+    threshold, so crossing it is a zero-LP move, and keeping the divisions
+    exactly 100 wide is what makes the reported delta equal the LP the player
+    actually gained. Widening them to 101 would restore strict monotonicity at
+    the cost of every number being wrong by one per division crossed.
     """
-    Calculate the absolute value of ELO change from change string
-    Returns absolute LP change value
-    """
-    if not change_str:
-        return 0
-    
-    lp_str = change_str.split()[0]
-    if lp_str.startswith("+") or lp_str.startswith("-"):
-        try:
-            return abs(int(lp_str))
-        except ValueError:
-            return 0
-    return 0
+    if tier in APEX_TIERS:
+        base = TIER_ORDER.index("MASTER") * LP_PER_TIER
+        return base + (lp or 0)
+    return (
+        get_tier_index(tier) * LP_PER_TIER
+        + get_division_index(division) * LP_PER_DIVISION
+        + (lp or 0)
+    )
 
 def get_top_changes(changes: List[Dict[str, any]], n: int=5)-> List[Dict[str, any]]:
     """
-    Get top N changes by absolute ELO change value
+    Get top N changes by absolute ladder movement.
     Returns a list of top changes sorted by absolute change (descending)
     """
     if not changes:
         return []
-    
+
     for change in changes:
-        change['absolute_change'] = calculate_absolute_change(change['change'])
-    
-    sorted_changes: list = sorted(changes, key=lambda x: x['absolute_change'], reverse=True)
-    
-    top_changes: list = sorted_changes[:n]
-    
+        change['absolute_change'] = abs(change.get('lp_change', 0))
+
+    # Ties broken by name so the ordering is stable run to run.
+    sorted_changes: list = sorted(
+        changes,
+        key=lambda x: (-x['absolute_change'], str(x['summ_id']).lower())
+    )
+
     formatted_top = []
-    for i, change in enumerate(top_changes, 1):
+    for i, change in enumerate(sorted_changes[:n], 1):
         formatted_top.append({
             'rank': i,
             'summ_id': change['summ_id'],
@@ -113,9 +139,10 @@ def get_top_changes(changes: List[Dict[str, any]], n: int=5)-> List[Dict[str, an
             'tier': change['tier'],
             'lp': change['lp'],
             'change': change['change'],
+            'lp_change': change.get('lp_change', 0),
             'absolute_change': change['absolute_change']
         })
-    
+
     return formatted_top
 
 def calculate_elo_change(
@@ -130,18 +157,25 @@ def calculate_elo_change(
     """
     Calculate comprehensive ELO change including tier and division changes
     Returns a dictionary with detailed change information
+
+    lp_change is movement in ladder points (see ladder_points), not the raw
+    difference between two league_points values.
     """
     if old_tier is None:
-        # First time tracking - just show current tier
+        # Nothing to diff against. Report the current standing, and a change of
+        # zero so a newly tracked player cannot dominate the top-changes list.
         return {
-            "lp_change": new_lp,
+            "lp_change": 0,
             "tier_change": None,
             "division_change": None,
-            "total_change": f"+{new_lp} LP ({new_tier} {new_division if new_division else ''})"
+            "total_change": f"Now {format_tier_rank(new_tier, new_division)} ({new_lp or 0} LP)"
         }
-    
-    lp_change: int = new_lp - old_lp if old_lp is not None else new_lp
-    
+
+    lp_change: int = (
+        ladder_points(new_tier, new_division, new_lp)
+        - ladder_points(old_tier, old_division, old_lp)
+    )
+
     old_tier_idx: int = get_tier_index(old_tier)
     new_tier_idx: int = get_tier_index(new_tier)
     
@@ -185,16 +219,14 @@ def calculate_elo_change(
         else:
             change_parts.append(f"Demoted to Division {division_change}")
     
-    if lp_change > 0 and division_change_type == "DEMOTED" and not tier_change:
-        # TO-DO: This shouldn't happen - gaining LP but getting demoted within same tier
-        change_parts = [f"{lp_change:+} LP"]
-    elif lp_change < 0 and division_change_type == "PROMOTED" and not tier_change:
-        # Also shouldn't happen - losing LP but getting promoted within same tier
-        change_parts = [f"{lp_change:+} LP"]
+    # The two guards that used to sit here -- rewriting the message when LP rose
+    # but the division fell, and vice versa -- are gone. They papered over the
+    # raw-LP subtraction. Ladder points are monotonic, so a promotion cannot
+    # produce a negative change and a demotion cannot produce a positive one.
 
     # If no changes detected, just show current tier/division
     if not change_parts:
-        change_parts.append(f"No change - {new_tier} {new_division if new_division else ''}")
+        change_parts.append(f"No change - {format_tier_rank(new_tier, new_division)}")
     
     return {
         "lp_change": lp_change,
@@ -286,16 +318,22 @@ def process_queue_changes(
         new_lp=current_row['league_points']
     )
     
-    # Check if there's actually a change (not just displaying current tier)
-    current_tier_display = f"{current_row['tier']} {current_row['rank'] if current_row['rank'] else ''}"
-    if change_info["total_change"] == current_tier_display:
-        return []  # No actual change occurred
-    
+    # Skip players who did not actually move. The previous check compared the
+    # message against "GOLD I" while the message reads "No change - GOLD I", so
+    # it never matched and unchanged players were reported every run.
+    if (
+        change_info["lp_change"] == 0
+        and change_info["tier_change"] is None
+        and change_info["division_change"] is None
+    ):
+        return []
+
     return [{
         "summ_id": summ_id,
         "queue": queue_name,
         "tier": format_tier_rank(current_row['tier'], current_row['rank']),
         "lp": current_row['league_points'],
+        "lp_change": change_info["lp_change"],
         "change": change_info["total_change"]
     }]
 
@@ -516,6 +554,7 @@ def convert_to_python_types(data: List[Dict[str, any]], is_top_changes: bool = F
                 "tier": item["tier"],
                 "lp": int(item["lp"]),
                 "change": item["change"],
+                "lp_change": int(item["lp_change"]),
                 "absolute_change": int(item["absolute_change"])
             }
         else:
@@ -524,6 +563,7 @@ def convert_to_python_types(data: List[Dict[str, any]], is_top_changes: bool = F
                 "queue": item["queue"],
                 "tier": item["tier"],
                 "lp": int(item["lp"]),
+                "lp_change": int(item["lp_change"]),
                 "change": item["change"]
             }
         result.append(converted)

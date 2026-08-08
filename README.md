@@ -159,6 +159,31 @@ connection is defined in `pgadmin_servers.json` instead. That file uses the
 compose service name `pgdatabase` and its **internal** port 5432, not the
 published host port.
 
+## Tests
+
+```bash
+pip install -r config/requirements.dev.txt
+pytest
+```
+
+The suite covers the ranked-ladder maths, which has no database or network
+dependency. `ladder_points` is verified **exhaustively** — every reachable rank
+from Iron IV 0 LP to Challenger is enumerated and asserted strictly increasing —
+rather than by sampled examples.
+
+### Why ladder points exist
+
+Riot's `league_points` resets to near zero on promotion, so subtracting two raw
+values reports a tier climb as a large loss. Gold IV 98 LP → Platinum IV 4 LP
+came out as **-94 LP** while the player had in fact gained 306. Because
+`get_top_changes` then ranked by absolute LP, the leaderboard was dominated by
+promotions masquerading as the worst losses of the day — the headline output was
+wrong precisely when something worth reporting had happened.
+
+`ladder_points` maps a rank onto one monotonic scale
+(`tier * 400 + division * 100 + lp`) before differencing, so the sign always
+agrees with the direction the player actually moved.
+
 ## Troubleshooting
 
 - If you encounter Google API authentication issues, verify your credentials in the `.env` file
