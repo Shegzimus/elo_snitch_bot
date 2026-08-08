@@ -1,27 +1,22 @@
-import requests
-import os
-import pandas as pd
-from dotenv import load_dotenv
-from sqlalchemy import create_engine
 import time
+from typing import List, Optional
+
+import pandas as pd
+import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from logger_config import setup_logger, get_logger
+
+import config
+from logger_config import setup_logger
 
 logger = setup_logger(__name__, 'elo_check.log')
 
-engine:object = create_engine("postgresql://root:root@localhost:5432/snitch_bot_db")
+engine = config.get_engine()
 
-env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "config", ".env"))
-if not os.path.exists(env_path):
-    raise FileNotFoundError(f"Could not find .env file at: {env_path}")
-load_dotenv(dotenv_path=env_path, override=True)
-
-# For debugging
-print(f"riot api key from .env: {os.getenv('riot_api_key')}")
+QUEUE_TYPES = ("RANKED_SOLO_5x5", "RANKED_FLEX_SR")
 
 
-def create_session_with_retries()-> object:
+def create_session_with_retries() -> requests.Session:
     """Create a requests session with retry strategy"""
     session = requests.Session()
     retry_strategy = Retry(
@@ -36,145 +31,117 @@ def create_session_with_retries()-> object:
     return session
 
 
-def fetch_puuid(db_connection: object) -> pd.DataFrame:
-    logger.info("Fetching PUUID data from database")
+def fetch_players(db_connection=engine) -> pd.DataFrame:
+    """Players that have a resolved puuid. Anyone without one is skipped --
+    generate_puuid.py is responsible for filling those in."""
+    logger.info("Fetching players from database")
     with db_connection.connect() as connection:
         df: pd.DataFrame = pd.read_sql(
-            "SELECT id, puuid FROM public.puuid", 
-            connection, 
-            index_col='id')
-        if df.empty:
-            logger.warning("No PUUID data found")
-        else:
-            logger.info(f"Fetched {len(df)} rows of PUUID data")
-        return df
+            """
+            SELECT id, summ_id, puuid
+            FROM public.players
+            WHERE puuid IS NOT NULL
+            ORDER BY id
+            """,
+            connection,
+            index_col='id',
+        )
+    if df.empty:
+        logger.warning("No players with a puuid found")
+    else:
+        logger.info(f"Fetched {len(df)} players with puuids")
+    return df
 
-def elo_check() -> tuple[list, list, pd.DataFrame]:
-    solo_queue_elo: list = []
-    flex_queue_elo: list = []
-    api_key: str = os.getenv("riot_api_key")
 
-    puuid_df: pd.DataFrame = fetch_puuid(db_connection=engine)
-    if puuid_df.empty:
-        print("No PUUID data found.")
-        return [], [], pd.DataFrame()
-    
-    # Create session with retry logic
-    session: object = create_session_with_retries()
-    
-    for idx, row in puuid_df.iterrows():
-        id_val: int = idx  # Renamed from 'id' to avoid shadowing built-in
-        puuid: str = row['puuid']
+def fetch_entries(session: requests.Session, puuid: str) -> Optional[list]:
+    """Return the raw league entries for a puuid, or None if the call failed."""
+    url = f"{config.RIOT_PLATFORM_BASE_URL}/lol/league/v4/entries/by-puuid/{puuid}"
+    headers = config.riot_headers()
 
-        logger.info(f"Processing player ID: {id_val} ({puuid_df.index.get_loc(idx) + 1}/{len(puuid_df)})")
-        
-        url: str = f"https://euw1.api.riotgames.com/lol/league/v4/entries/by-puuid/{puuid}?api_key={api_key}"
-        headers: dict = {"X-Riot-Token": api_key}
-        
+    response = session.get(url, headers=headers, timeout=30)
+
+    if response.status_code == 200:
+        return response.json()
+
+    if response.status_code == 429:
+        retry_after = int(response.headers.get("Retry-After", 60))
+        logger.warning(f"Rate limited. Waiting {retry_after}s before retry...")
+        time.sleep(retry_after)
+        response = session.get(url, headers=headers, timeout=30)
+        if response.status_code == 200:
+            return response.json()
+
+    logger.error(f"Riot API returned {response.status_code}: {response.text[:200]}")
+    return None
+
+
+def elo_check() -> List[dict]:
+    """Fetch current ranked standings for every player with a puuid.
+
+    Returns one row per player per queue they are ranked in. Players who are
+    unranked in a queue simply produce no row for it.
+    """
+    players_df = fetch_players()
+    if players_df.empty:
+        return []
+
+    session = create_session_with_retries()
+    scanned_at = pd.Timestamp.now()
+    rows: List[dict] = []
+
+    total = len(players_df)
+    for position, (player_key, player) in enumerate(players_df.iterrows(), start=1):
+        logger.info(f"Processing {player['summ_id']} ({position}/{total})")
+
         try:
-            # Add timeout to prevent hanging
-            response: object = session.get(url, headers=headers, timeout=30)
-            
-            if response.status_code == 200:
-                data: dict = response.json()
-                
-                # Find solo queue and flex queue data
-                solo_queue: dict = next((item for item in data if item["queueType"] == "RANKED_SOLO_5x5"), None)
-                flex_queue: dict = next((item for item in data if item["queueType"] == "RANKED_FLEX_SR"), None)
-                
-                solo_queue_elo.append(solo_queue)
-                flex_queue_elo.append(flex_queue)
-                
-                logger.info(f"Success for ID: {id_val}")
-                
-            elif response.status_code == 429:
-                logger.warning(f"Rate limited for ID: {id_val}. Waiting 60 seconds...")
-                time.sleep(60)
-                # Retry the request
-                response: object = session.get(url, headers=headers, timeout=30)
-                if response.status_code == 200:
-                    data: dict = response.json()
-                    solo_queue: dict = next((item for item in data if item["queueType"] == "RANKED_SOLO_5x5"), None)
-                    flex_queue: dict = next((item for item in data if item["queueType"] == "RANKED_FLEX_SR"), None)
-                    solo_queue_elo.append(solo_queue)
-                    flex_queue_elo.append(flex_queue)
-                    logger.info(f"Retry success for ID: {id_val}")
-                else:
-                    logger.error(f"Retry failed for ID: {id_val}, Status: {response.status_code}")
-                    solo_queue_elo.append(None)
-                    flex_queue_elo.append(None)
-            else:
-                logger.error(f"Failed for ID: {id_val}, Status code: {response.status_code}, Response: {response.text}")
-                solo_queue_elo.append(None)
-                flex_queue_elo.append(None)
-                
+            entries = fetch_entries(session, player['puuid'])
         except requests.exceptions.Timeout:
-            logger.error(f"Timeout for ID: {id_val}")
-            solo_queue_elo.append(None)
-            flex_queue_elo.append(None)
+            logger.error(f"Timeout for {player['summ_id']}")
+            entries = None
         except requests.exceptions.RequestException as e:
-            logger.error(f"Request error for ID: {id_val}: {e}")
-            solo_queue_elo.append(None)
-            flex_queue_elo.append(None)
-        
-        # Add delay between requests to respect rate limits
-        # Riot API allows 20 requests per second, so 0.1 second delay is safe
+            logger.error(f"Request error for {player['summ_id']}: {e}")
+            entries = None
+
+        if entries is None:
+            continue
+
+        for queue_type in QUEUE_TYPES:
+            entry = next((item for item in entries if item.get("queueType") == queue_type), None)
+            if entry is None:
+                continue
+            rows.append({
+                "timestamp": scanned_at,
+                "player_key": player_key,
+                "queue_type": queue_type,
+                "tier": entry["tier"],
+                "rank": entry.get("rank"),
+                "league_points": entry["leaguePoints"],
+                "wins": entry["wins"],
+                "losses": entry["losses"],
+            })
+
+        # Riot allows 20 req/s on a dev key; 0.1s keeps us well inside that.
         time.sleep(0.1)
 
-    return solo_queue_elo, flex_queue_elo, puuid_df
+    return rows
+
 
 def main():
     logger.info("Starting ELO check process")
-    solo_queue_elo, flex_queue_elo, puuid_df = elo_check()
+    rows = elo_check()
 
-    # Filter out None values and create DataFrames directly from the list of dictionaries
-    solo_queue_data: list = [item for item in solo_queue_elo if item is not None]
-    flex_queue_data: list = [item for item in flex_queue_elo if item is not None]
-    
-    solo_df: pd.DataFrame = pd.DataFrame(solo_queue_data)
-    flex_df: pd.DataFrame = pd.DataFrame(flex_queue_data)
-    
-    logger.info("Processing solo queue data")
-    solo_df: pd.DataFrame = pd.DataFrame(solo_queue_data)
-    flex_df: pd.DataFrame = pd.DataFrame(flex_queue_data)
-    
-    logger.debug(f"Solo Queue Data: {solo_df}")
-    logger.debug(f"Flex Queue Data: {flex_df}")
-    
-    if not solo_df.empty:
-        # Filter puuid_df to match the length of solo_df
-        valid_player_ids = [puuid_df.index[i] for i, elo in enumerate(solo_queue_elo) if elo is not None]
+    if not rows:
+        logger.warning("No ranked data to load.")
+        return
 
-        solo_df['queue_type'] = 'RANKED_SOLO_5x5'
-        solo_df['player_id'] = valid_player_ids
-        solo_df['timestamp'] = pd.Timestamp.now()
+    df = pd.DataFrame(rows)
+    logger.info(f"Loading {len(df)} scan rows to database")
+    df.to_sql(name="elo_history", con=engine, if_exists='append', index=False)
 
-        solo_df: pd.DataFrame = solo_df[['timestamp','player_id', 'queue_type', 'tier', 'rank', 'leaguePoints', 'wins', 'losses', ]]
-        
-        solo_df: pd.DataFrame = solo_df.rename(columns={'leaguePoints': 'league_points'})
-        
-        logger.info("Loading solo queue data to database")
-        solo_df.to_sql(name="elo_history", con=engine, if_exists='append', index=False)
-        logger.info("Solo queue data loaded successfully into the database.")
-    else:
-        logger.warning("No solo queue data to load.")
-        
-    if not flex_df.empty:
-        valid_player_ids = [puuid_df.index[i] for i, elo in enumerate(flex_queue_elo) if elo is not None]
-        
-        flex_df['queue_type'] = 'RANKED_FLEX_SR'
-        flex_df['player_id'] = valid_player_ids
-        flex_df['timestamp'] = pd.Timestamp.now()
-        
-        flex_df: pd.DataFrame = flex_df[['timestamp','player_id', 'queue_type', 'tier', 'rank', 'leaguePoints', 'wins', 'losses' ]]
-        
-        flex_df: pd.DataFrame = flex_df.rename(columns={'leaguePoints': 'league_points'})
-        
-        logger.info("Loading flex queue data to database")
-        flex_df.to_sql(name="elo_history", con=engine, if_exists='append', index=False)
-        logger.info("Flex queue data loaded successfully into the database.")
-    else:
-        logger.warning("No flex queue data to load.")
+    for queue_type, count in df['queue_type'].value_counts().items():
+        logger.info(f"  {queue_type}: {count} players")
+    logger.info("Scan data loaded successfully into the database.")
+
 
 if __name__ == "__main__":
     try:

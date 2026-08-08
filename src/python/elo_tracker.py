@@ -1,17 +1,15 @@
 import os
 import pandas as pd
-from dotenv import load_dotenv
-from sqlalchemy import create_engine
 from datetime import datetime
 import json
 from typing import Tuple, Dict, List
-from logger_config import setup_logger, get_logger
+
+import config
+from logger_config import setup_logger
 
 logger = setup_logger(__name__, 'elo_tracker.log')
 
-load_dotenv()
-
-engine = create_engine("postgresql://root:root@localhost:5432/snitch_bot_db")
+engine = config.get_engine()
 
 # Constants for message formatting
 MESSAGE_HEADER = "*ELO CHANGES UPDATE*\n\n"
@@ -52,6 +50,17 @@ def create_daily_directory(folder: str)-> Tuple[str, str]:
     os.makedirs(daily_dir, exist_ok=True)
     return data_dir, daily_dir
     
+def write_snapshot(daily_path: str, latest_path: str, payload: Dict[str, any])-> None:
+    """Write a snapshot to its dated file and mirror it to latest.json.
+
+    latest.json is a plain copy rather than a symlink: os.symlink needs the
+    SeCreateSymbolicLink privilege on Windows, so the symlink always failed and
+    latest.json never actually existed.
+    """
+    for path in (daily_path, latest_path):
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(payload, f, indent=2)
+
 def get_tier_index(tier: str)-> int:
     return TIER_ORDER.index(tier)
 
@@ -194,12 +203,12 @@ def calculate_elo_change(
         "total_change": " - ".join(change_parts)
     }
 
-def fetch_puuid(db_connection: object)-> pd.DataFrame:
+def fetch_players(db_connection: object)-> pd.DataFrame:
     with db_connection.connect() as connection:
         df = pd.read_sql("""
-            SELECT fr.summ_id, p.puuid
-            FROM public.puuid p
-            JOIN public.form_responses fr ON p.id = fr.index
+            SELECT summ_id, puuid
+            FROM public.players
+            WHERE puuid IS NOT NULL
         """, connection)
         return df
 
@@ -207,8 +216,8 @@ def fetch_previous_elo(db_connection: object)-> Tuple[pd.DataFrame, pd.DataFrame
     with db_connection.connect() as connection:
         # Fetch the last two scans from elo_history
         query = """
-        SELECT 
-            fr.summ_id,
+        SELECT
+            p.summ_id,
             eh.queue_type,
             eh.tier,
             eh.rank,
@@ -216,9 +225,9 @@ def fetch_previous_elo(db_connection: object)-> Tuple[pd.DataFrame, pd.DataFrame
             eh.wins,
             eh.losses,
             eh.timestamp,
-            ROW_NUMBER() OVER (PARTITION BY fr.summ_id, eh.queue_type ORDER BY eh.timestamp DESC) as scan_number
-        FROM elo_history eh
-        JOIN public.form_responses fr ON eh.player_id = fr.index
+            ROW_NUMBER() OVER (PARTITION BY eh.player_key, eh.queue_type ORDER BY eh.timestamp DESC) as scan_number
+        FROM public.elo_history eh
+        JOIN public.players p ON eh.player_key = p.id
         """
         
         df = pd.read_sql(query, connection)
@@ -300,7 +309,7 @@ def get_queue_data() -> Tuple[pd.DataFrame, Dict[str, Tuple[pd.DataFrame, pd.Dat
         Tuple of (puuid_df, queue_data_dict) where queue_data_dict contains
         current and previous dataframes for each queue type
     """
-    puuid_df = fetch_puuid(engine)
+    puuid_df = fetch_players(engine)
     if puuid_df.empty:
         return puuid_df, {}
     
@@ -351,10 +360,10 @@ def fetch_winrate()-> Tuple[List[Dict[str, any]], List[Dict[str, any]]]:
     wr_solo = []
     wr_flex = []
     with engine.connect() as connection:
-        query:str = f"""
+        query:str = """
         WITH latest_scans AS (
-            SELECT 
-                fr.summ_id,
+            SELECT
+                p.summ_id,
                 eh.queue_type,
                 eh.tier,
                 eh.rank,
@@ -363,19 +372,19 @@ def fetch_winrate()-> Tuple[List[Dict[str, any]], List[Dict[str, any]]]:
                 eh.losses,
                 eh.timestamp,
                 ROW_NUMBER() OVER (
-                    PARTITION BY fr.summ_id, eh.queue_type 
+                    PARTITION BY eh.player_key, eh.queue_type
                     ORDER BY eh.timestamp DESC
                 ) AS scan_number
             FROM public.elo_history eh
-            JOIN public.form_responses fr 
-                ON eh.player_id = fr.index
+            JOIN public.players p
+                ON eh.player_key = p.id
         ),
         filtered_scans AS (
             SELECT *
             FROM latest_scans
             WHERE scan_number = 1
         )
-        SELECT 
+        SELECT
             summ_id,
             queue_type,
             tier,
@@ -384,10 +393,12 @@ def fetch_winrate()-> Tuple[List[Dict[str, any]], List[Dict[str, any]]]:
             wins,
             losses,
             (wins + losses) AS total_games,
-            ROUND(((wins::numeric / NULLIF(wins + losses, 0)) * 100)::numeric, 2) AS win_rate,
+            COALESCE(
+                ROUND(((wins::numeric / NULLIF(wins + losses, 0)) * 100)::numeric, 2),
+                0
+            ) AS win_rate,
             timestamp
         FROM filtered_scans
-        WHERE queue_type = 'RANKED_SOLO_5x5'
         ORDER BY win_rate DESC;
         """
         df: pd.DataFrame = pd.read_sql(query, connection)
@@ -544,23 +555,13 @@ def main()->None:
         file_path = os.path.join(daily_dir, filename)
         
         try:
-            with open(file_path, 'w') as f:
-                json.dump({
-                    "message": message,
-                    "timestamp": timestamp,
-                    "changes": python_changes,
-                    "top_changes": python_top_changes
-                }, f, indent=2)
-            
-            try:
-                if os.path.exists(latest_path):
-                    os.remove(latest_path)
-                os.symlink(os.path.abspath(file_path), latest_path)
-            except Exception as e:
-                logger.warning(f"Could not create/update latest symlink: {e}")
-            
-            logger.info(f"ELO changes tracked and saved. Message saved to {file_path}")
-            logger.info(f"Latest symlink updated to point to {filename}")
+            write_snapshot(file_path, latest_path, {
+                "message": message,
+                "timestamp": timestamp,
+                "changes": python_changes,
+                "top_changes": python_top_changes
+            })
+            logger.info(f"ELO changes saved to {file_path} and mirrored to latest.json")
         except Exception as e:
             logger.error(f"Failed to save ELO changes data: {e}", exc_info=True)
     else:
@@ -576,22 +577,12 @@ def main()->None:
         file_path = os.path.join(daily_dir, filename)
         
         try:
-            with open(file_path, 'w') as f:
-                json.dump({
-                    "message": message,
-                    "timestamp": timestamp,
-                    "changes": wr_solo
-                }, f, indent=2)
-            
-            try:
-                if os.path.exists(latest_path):
-                    os.remove(latest_path)
-                os.symlink(os.path.abspath(file_path), latest_path)
-            except Exception as e:
-                logger.warning(f"Could not create/update latest symlink: {e}")
-            
-            logger.info(f"Winrate tracked and saved. Message saved to {file_path}")
-            logger.info(f"Latest symlink updated to point to {filename}")
+            write_snapshot(file_path, latest_path, {
+                "message": message,
+                "timestamp": timestamp,
+                "changes": wr_solo
+            })
+            logger.info(f"Solo winrate saved to {file_path} and mirrored to latest.json")
         except Exception as e:
             logger.error(f"Failed to save solo winrate data: {e}", exc_info=True)
     else:
@@ -608,22 +599,12 @@ def main()->None:
         file_path = os.path.join(daily_dir, filename)
         
         try:
-            with open(file_path, 'w') as f:
-                json.dump({
-                    "message": message,
-                    "timestamp": timestamp,
-                    "changes": wr_flex
-                }, f, indent=2)
-            
-            try:
-                if os.path.exists(latest_path):
-                    os.remove(latest_path)
-                os.symlink(os.path.abspath(file_path), latest_path)
-            except Exception as e:
-                logger.warning(f"Could not create/update latest symlink: {e}")
-            
-            logger.info(f"Winrate tracked and saved. Message saved to {file_path}")
-            logger.info(f"Latest symlink updated to point to {filename}")
+            write_snapshot(file_path, latest_path, {
+                "message": message,
+                "timestamp": timestamp,
+                "changes": wr_flex
+            })
+            logger.info(f"Flex winrate saved to {file_path} and mirrored to latest.json")
         except Exception as e:
             logger.error(f"Failed to save flex winrate data: {e}", exc_info=True)
     else:
