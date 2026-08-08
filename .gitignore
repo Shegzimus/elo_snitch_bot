@@ -24,3 +24,7 @@ config/pgadmin.env
 .wwebjs_cache/
 .wwebjs_auth
 .env
+
+
+# Logs
+logs
