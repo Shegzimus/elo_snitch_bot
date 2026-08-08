@@ -5,6 +5,9 @@ from sqlalchemy import create_engine
 from datetime import datetime
 import json
 from typing import Tuple, Dict, List
+from logger_config import setup_logger, get_logger
+
+logger = setup_logger(__name__, 'elo_tracker.log')
 
 load_dotenv()
 
@@ -321,14 +324,15 @@ def track_elo_changes() -> List[Dict[str, any]]:
     Returns:
         List of dictionaries containing change information for summoners with changes
     """
+    logger.info("Starting ELO change tracking")
     puuid_df, queue_data = get_queue_data()
     
     if puuid_df.empty:
-        print("No PUUID data found.")
+        logger.warning("No PUUID data found")
         return []
     
     if not queue_data:
-        print("No queue data available.")
+        logger.warning("No queue data available")
         return []
     
     all_changes = []
@@ -340,6 +344,7 @@ def track_elo_changes() -> List[Dict[str, any]]:
             changes = process_queue_changes(summ_id, current_df, previous_df, queue_name)
             all_changes.extend(changes)
     
+    logger.info(f"Found {len(all_changes)} ELO changes")
     return all_changes
 
 def fetch_winrate()-> Tuple[List[Dict[str, any]], List[Dict[str, any]]]:
@@ -514,11 +519,13 @@ def convert_to_python_types(data: List[Dict[str, any]], is_top_changes: bool = F
     return result
 
 def main()->None:
+    logger.info("Starting ELO tracker main process")
     changes = track_elo_changes()
 
     wr_solo, wr_flex = fetch_winrate()
     
     if changes:
+        logger.info("Processing ELO changes for output")
         # Format message for WhatsApp bot
         message = format_elo_changes_message(changes)
         
@@ -536,27 +543,31 @@ def main()->None:
         filename = f"elo_changes_{timestamp}.json"
         file_path = os.path.join(daily_dir, filename)
         
-        with open(file_path, 'w') as f:
-            json.dump({
-                "message": message,
-                "timestamp": timestamp,
-                "changes": python_changes,
-                "top_changes": python_top_changes
-            }, f, indent=2)
-        
         try:
-            if os.path.exists(latest_path):
-                os.remove(latest_path)
-            os.symlink(os.path.abspath(file_path), latest_path)
+            with open(file_path, 'w') as f:
+                json.dump({
+                    "message": message,
+                    "timestamp": timestamp,
+                    "changes": python_changes,
+                    "top_changes": python_top_changes
+                }, f, indent=2)
+            
+            try:
+                if os.path.exists(latest_path):
+                    os.remove(latest_path)
+                os.symlink(os.path.abspath(file_path), latest_path)
+            except Exception as e:
+                logger.warning(f"Could not create/update latest symlink: {e}")
+            
+            logger.info(f"ELO changes tracked and saved. Message saved to {file_path}")
+            logger.info(f"Latest symlink updated to point to {filename}")
         except Exception as e:
-            print(f"Warning: Could not create/update latest symlink: {e}")
-        
-        print(f"ELO changes tracked and saved. Message saved to {file_path}")
-        print(f"Latest symlink updated to point to {filename}")
+            logger.error(f"Failed to save ELO changes data: {e}", exc_info=True)
     else:
-        print("No ELO changes detected.")
+        logger.info("No ELO changes detected")
 
     if wr_solo:
+        logger.info("Processing solo/duo winrate data")
         message = format_winrate_message(wr_solo, queue_type="Solo/Duo")
         _, timestamp = get_current_date_time()
         data_dir, daily_dir = create_daily_directory("winrate/solo")
@@ -564,26 +575,30 @@ def main()->None:
         filename = f"winrate_solo_{timestamp}.json"
         file_path = os.path.join(daily_dir, filename)
         
-        with open(file_path, 'w') as f:
-            json.dump({
-                "message": message,
-                "timestamp": timestamp,
-                "changes": wr_solo
-            }, f, indent=2)
-        
         try:
-            if os.path.exists(latest_path):
-                os.remove(latest_path)
-            os.symlink(os.path.abspath(file_path), latest_path)
+            with open(file_path, 'w') as f:
+                json.dump({
+                    "message": message,
+                    "timestamp": timestamp,
+                    "changes": wr_solo
+                }, f, indent=2)
+            
+            try:
+                if os.path.exists(latest_path):
+                    os.remove(latest_path)
+                os.symlink(os.path.abspath(file_path), latest_path)
+            except Exception as e:
+                logger.warning(f"Could not create/update latest symlink: {e}")
+            
+            logger.info(f"Winrate tracked and saved. Message saved to {file_path}")
+            logger.info(f"Latest symlink updated to point to {filename}")
         except Exception as e:
-            print(f"Warning: Could not create/update latest symlink: {e}")
-        
-        print(f"Winrate tracked and saved. Message saved to {file_path}")
-        print(f"Latest symlink updated to point to {filename}")
+            logger.error(f"Failed to save solo winrate data: {e}", exc_info=True)
     else:
-        print("No solo/duo winrate data available.")
+        logger.warning("No solo/duo winrate data available")
 
     if wr_flex:
+        logger.info("Processing flex winrate data")
         message = format_winrate_message(wr_flex, queue_type="Flex")
         _, timestamp = get_current_date_time()
         data_dir, daily_dir = create_daily_directory("winrate/flex")
@@ -592,24 +607,31 @@ def main()->None:
         filename = f"winrate_flex_{timestamp}.json"
         file_path = os.path.join(daily_dir, filename)
         
-        with open(file_path, 'w') as f:
-            json.dump({
-                "message": message,
-                "timestamp": timestamp,
-                "changes": wr_flex
-            }, f, indent=2)
-        
         try:
-            if os.path.exists(latest_path):
-                os.remove(latest_path)
-            os.symlink(os.path.abspath(file_path), latest_path)
+            with open(file_path, 'w') as f:
+                json.dump({
+                    "message": message,
+                    "timestamp": timestamp,
+                    "changes": wr_flex
+                }, f, indent=2)
+            
+            try:
+                if os.path.exists(latest_path):
+                    os.remove(latest_path)
+                os.symlink(os.path.abspath(file_path), latest_path)
+            except Exception as e:
+                logger.warning(f"Could not create/update latest symlink: {e}")
+            
+            logger.info(f"Winrate tracked and saved. Message saved to {file_path}")
+            logger.info(f"Latest symlink updated to point to {filename}")
         except Exception as e:
-            print(f"Warning: Could not create/update latest symlink: {e}")
-        
-        print(f"Winrate tracked and saved. Message saved to {file_path}")
-        print(f"Latest symlink updated to point to {filename}")
+            logger.error(f"Failed to save flex winrate data: {e}", exc_info=True)
     else:
-        print("No flex winrate data available.")
+        logger.warning("No flex winrate data available")
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        logger.error(f"Unhandled exception in main: {e}", exc_info=True)
+        raise

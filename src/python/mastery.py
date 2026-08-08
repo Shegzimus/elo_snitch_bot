@@ -4,21 +4,25 @@ from datetime import datetime
 import pandas as pd
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
+from logger_config import setup_logger, get_logger
+
+logger = setup_logger(__name__, 'mastery.log')
 
 load_dotenv(dotenv_path=os.path.join("config", ".env"))
 
 engine:object = create_engine("postgresql://root:root@localhost:5432/snitch_bot_db")
 
 def fetch_puuid(db_connection: object) -> pd.DataFrame:
+    logger.info("Fetching PUUID data from database")
     with db_connection.connect() as connection:
         df: pd.DataFrame = pd.read_sql(
             "SELECT id, puuid FROM public.puuid", 
             connection, 
             index_col='id')
         if df.empty:
-            print("No PUUID data found.")
+            logger.warning("No PUUID data found")
         else:
-            print(f"Fetched {len(df)} rows of PUUID data.")
+            logger.info(f"Fetched {len(df)} rows of PUUID data")
         return df
 
 def mastery_check():
@@ -26,15 +30,16 @@ def mastery_check():
     Fetches champion mastery data for all PUUIDs in the database.
     Returns a DataFrame with mastery information or empty DataFrame if no data.
     """
+    logger.info("Starting champion mastery check")
     mastery_data = []
 
     api_key: str = os.getenv("riot_api_key")
     if not api_key:
-        raise ValueError("API key is not set in environment variables.")
+        raise ValueError("API key is not set in environment variables")
 
     puuid_df: pd.DataFrame = fetch_puuid(db_connection=engine)
     if puuid_df.empty:
-        print("No PUUID data found.")
+        logger.warning("No PUUID data found")
         return pd.DataFrame()  # Return empty DataFrame consistently
     
     for idx, row in puuid_df.iterrows():
@@ -60,38 +65,44 @@ def mastery_check():
                         'championSeasonMilestone': item['championSeasonMilestone']
                     })
                     
-                print(f"Successfully fetched mastery data for PUUID: {puuid}")
+                logger.debug(f"Successfully fetched mastery data for PUUID: {puuid}")
                 
             else:
-                print(f"Failed for PUUID: {puuid}, Status code: {response.status_code}")
+                logger.warning(f"Failed for PUUID: {puuid}, Status code: {response.status_code}")
                 if response.status_code == 429:
-                    print("Rate limit exceeded. Consider adding delays between requests.")
+                    logger.warning("Rate limit exceeded. Consider adding delays between requests")
                 elif response.status_code == 403:
-                    print("Forbidden - check your API key permissions.")
+                    logger.warning("Forbidden - check your API key permissions")
 
         except requests.RequestException as e:
-            print(f"Request failed for PUUID: {puuid}, Error: {e}")
+            logger.error(f"Request failed for PUUID: {puuid}, Error: {e}")
         except KeyError as e:
-            print(f"Missing expected field in API response for PUUID: {puuid}, Field: {e}")
+            logger.error(f"Missing expected field in API response for PUUID: {puuid}, Field: {e}")
         except Exception as e:
-            print(f"Unexpected error for PUUID: {puuid}, Error: {e}")
+            logger.error(f"Unexpected error for PUUID: {puuid}, Error: {e}")
 
     if mastery_data:
         mastery_df = pd.DataFrame(mastery_data)
-        print(f"Mastery data fetched successfully. Total records: {len(mastery_df)}")
+        logger.info(f"Mastery data fetched successfully. Total records: {len(mastery_df)}")
         return mastery_df
     else:
-        print("No mastery data was successfully fetched.")
+        logger.warning("No mastery data was successfully fetched")
         return pd.DataFrame()
 
 def main():
+    logger.info("Starting mastery data main process")
     mastery_df = mastery_check()
     if not mastery_df.empty:
+        logger.info("Loading mastery data to database")
         mastery_df.to_sql(name="mastery", con=engine, if_exists='replace', index=False)
-        print(mastery_df.head())
-        print("Mastery data loaded successfully into the database.")
+        logger.debug(f"Sample mastery data:\n{mastery_df.head()}")
+        logger.info("Mastery data loaded successfully into the database")
     else:
-        print("No mastery or milestone data to load.")
+        logger.warning("No mastery or milestone data to load")
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        logger.error(f"Unhandled exception in main: {e}", exc_info=True)
+        raise

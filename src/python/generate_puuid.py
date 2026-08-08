@@ -4,6 +4,9 @@ import pandas as pd
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 from typing import Dict, Optional, Tuple
+from logger_config import setup_logger, get_logger
+
+logger = setup_logger(__name__, 'generate_puuid.log')
 
 load_dotenv(dotenv_path=os.path.join("config", ".env"))
 
@@ -69,9 +72,10 @@ def process_players() -> Dict[int, str]:
 
     df = fetch_player_data()
     if df.empty:
-        print("No player data found.")
+        logger.warning("No player data found")
         return {}
 
+    logger.info(f"Processing {len(df)} players for PUUID updates")
     puuid_map = {}
     updated_count = 0
     
@@ -82,6 +86,7 @@ def process_players() -> Dict[int, str]:
         
         if pd.notna(existing_puuid) and existing_puuid:
             puuid_map[player_id] = existing_puuid
+            logger.debug(f"Skipping {summoner_name}#{tag} - PUUID already exists")
             continue
             
         puuid = get_puuid_from_riot(summoner_name, tag, api_key)
@@ -89,35 +94,39 @@ def process_players() -> Dict[int, str]:
             puuid_map[player_id] = puuid
             update_puuid_in_form_responses_2(player_id, puuid)
             updated_count += 1
-            print(f"Updated puuid for {summoner_name}#{tag}")
+            logger.info(f"Updated puuid for {summoner_name}#{tag}")
         else:
-            print(f"Failed to get puuid for {summoner_name}#{tag}")
+            logger.warning(f"Failed to get puuid for {summoner_name}#{tag}")
             puuid_map[player_id] = None
     
     if updated_count > 0:
-        print(f"Updated {updated_count} player puuids.")
+        logger.info(f"Updated {updated_count} player puuids")
     
     return puuid_map
 
 
 def main():
-    print("Starting puuid update process...")
+    logger.info("Starting puuid update process")
     
     ensure_puuid_table_exists()
     
     puuid_map = process_players()
     
     if puuid_map:
-        print(f"Processed {len(puuid_map)} players.")
+        logger.info(f"Processed {len(puuid_map)} players")
         df = pd.DataFrame(
             [(player_id, puuid) for player_id, puuid in puuid_map.items() if puuid],
             columns=['player_id', 'puuid']
         )
-        print("\nSummary of puuids:")
-        print(df)
+        logger.info("Summary of puuids:")
+        logger.debug(f"\n{df}")
     else:
-        print("No players were processed.")
+        logger.warning("No players were processed")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        logger.error(f"Unhandled exception in main: {e}", exc_info=True)
+        raise

@@ -4,6 +4,9 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 import pandas as pd
 from sqlalchemy import create_engine, text
+from logger_config import setup_logger, get_logger
+
+logger = setup_logger(__name__, 'fetch_google_forms_data.log')
 
 env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "config", ".env"))
 
@@ -20,6 +23,7 @@ engine:object = create_engine("postgresql://root:root@localhost:5432/snitch_bot_
 
 def test_network_connectivity()-> None:
     """Test if we can reach Google's servers with proper SSL context"""
+    logger.info("Testing network connectivity to Google services")
     import socket
     import ssl
     
@@ -31,34 +35,34 @@ def test_network_connectivity()-> None:
     
     for host, port, path in test_hosts:
         try:
-            print(f"\nTesting connection to {host}:{port}...")
+            logger.info(f"Testing connection to {host}:{port}...")
             
             context = ssl.create_default_context()
             context.check_hostname = True
             context.verify_mode = ssl.CERT_REQUIRED
             
             with socket.create_connection((host, port), timeout=10) as sock:
-                print(f"TCP connection to {host}:{port} successful")
+                logger.debug(f"TCP connection to {host}:{port} successful")
                 
                 with context.wrap_socket(sock, server_hostname=host) as ssock:
-                    print(f"SSL handshake successful. Protocol: {ssock.version()}")
+                    logger.debug(f"SSL handshake successful. Protocol: {ssock.version()}")
                     
                     request = f"GET {path} HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n"
                     ssock.sendall(request.encode())
                     response = ssock.recv(4096).decode()
                     status_line = response.split('\r\n')[0]
-                    print(f"HTTP request successful. Status: {status_line}")
+                    logger.debug(f"HTTP request successful. Status: {status_line}")
                     
         except Exception as e:
-            print(f"Error connecting to {host}:{port}: {str(e)}")
+            logger.error(f"Error connecting to {host}:{port}: {str(e)}")
             import traceback
-            traceback.print_exc()
+            logger.debug(traceback.format_exc())
 
 def create_google_sheets_service(credentials_path: str)-> object:
     """Create and return an authorized Google Sheets API service instance."""
     try:
         credentials_path = os.path.abspath(credentials_path)
-        print(f"Using credentials from: {credentials_path}")
+        logger.info(f"Using credentials from: {credentials_path}")
         
         creds = service_account.Credentials.from_service_account_file(
             credentials_path,
@@ -69,9 +73,10 @@ def create_google_sheets_service(credentials_path: str)-> object:
                        cache_discovery=False,  
                        static_discovery=False)  
         
+        logger.info("Google Sheets service created successfully")
         return service
     except Exception as e:
-        print(f"Error creating Google Sheets service: {str(e)}")
+        logger.error(f"Error creating Google Sheets service: {str(e)}")
         raise
 
 def fetch_google_sheet_data(
@@ -166,13 +171,15 @@ def load_to_db(df: pd.DataFrame, table_name: str, db_connection: object = engine
     print(f"Successfully added {len(df)} new entries to {table_name} table.")
 
 def main():
+    logger.info("Starting Google Forms data fetch process")
     df = fetch_google_sheet_data()
     if df is None or df.empty:
-        print("No data was fetched from Google Sheets.")
+        logger.warning("No data was fetched from Google Sheets")
         return
         
-    print(f"Fetched {len(df)} total entries from Google Sheets.")
+    logger.info(f"Fetched {len(df)} total entries from Google Sheets")
     load_to_db(df, table_name="form_responses_2", db_connection=engine)
+    logger.info("Google Forms data fetch process completed")
 
 
 if __name__ == "__main__":

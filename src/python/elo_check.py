@@ -6,6 +6,9 @@ from sqlalchemy import create_engine
 import time
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+from logger_config import setup_logger, get_logger
+
+logger = setup_logger(__name__, 'elo_check.log')
 
 engine:object = create_engine("postgresql://root:root@localhost:5432/snitch_bot_db")
 
@@ -34,15 +37,16 @@ def create_session_with_retries()-> object:
 
 
 def fetch_puuid(db_connection: object) -> pd.DataFrame:
+    logger.info("Fetching PUUID data from database")
     with db_connection.connect() as connection:
         df: pd.DataFrame = pd.read_sql(
             "SELECT id, puuid FROM public.puuid", 
             connection, 
             index_col='id')
         if df.empty:
-            print("No PUUID data found.")
+            logger.warning("No PUUID data found")
         else:
-            print(f"Fetched {len(df)} rows of PUUID data.")
+            logger.info(f"Fetched {len(df)} rows of PUUID data")
         return df
 
 def elo_check() -> tuple[list, list, pd.DataFrame]:
@@ -62,7 +66,7 @@ def elo_check() -> tuple[list, list, pd.DataFrame]:
         id_val: int = idx  # Renamed from 'id' to avoid shadowing built-in
         puuid: str = row['puuid']
 
-        print(f"Processing player ID: {id_val} ({puuid_df.index.get_loc(idx) + 1}/{len(puuid_df)})")
+        logger.info(f"Processing player ID: {id_val} ({puuid_df.index.get_loc(idx) + 1}/{len(puuid_df)})")
         
         url: str = f"https://euw1.api.riotgames.com/lol/league/v4/entries/by-puuid/{puuid}?api_key={api_key}"
         headers: dict = {"X-Riot-Token": api_key}
@@ -81,10 +85,10 @@ def elo_check() -> tuple[list, list, pd.DataFrame]:
                 solo_queue_elo.append(solo_queue)
                 flex_queue_elo.append(flex_queue)
                 
-                print(f"Success for ID: {id_val}")
+                logger.info(f"Success for ID: {id_val}")
                 
             elif response.status_code == 429:
-                print(f"Rate limited for ID: {id_val}. Waiting 60 seconds...")
+                logger.warning(f"Rate limited for ID: {id_val}. Waiting 60 seconds...")
                 time.sleep(60)
                 # Retry the request
                 response: object = session.get(url, headers=headers, timeout=30)
@@ -94,22 +98,22 @@ def elo_check() -> tuple[list, list, pd.DataFrame]:
                     flex_queue: dict = next((item for item in data if item["queueType"] == "RANKED_FLEX_SR"), None)
                     solo_queue_elo.append(solo_queue)
                     flex_queue_elo.append(flex_queue)
-                    print(f"Retry success for ID: {id_val}")
+                    logger.info(f"Retry success for ID: {id_val}")
                 else:
-                    print(f"Retry failed for ID: {id_val}, Status: {response.status_code}")
+                    logger.error(f"Retry failed for ID: {id_val}, Status: {response.status_code}")
                     solo_queue_elo.append(None)
                     flex_queue_elo.append(None)
             else:
-                print(f"Failed for ID: {id_val}, Status code: {response.status_code}, Response: {response.text}")
+                logger.error(f"Failed for ID: {id_val}, Status code: {response.status_code}, Response: {response.text}")
                 solo_queue_elo.append(None)
                 flex_queue_elo.append(None)
                 
         except requests.exceptions.Timeout:
-            print(f"Timeout for ID: {id_val}")
+            logger.error(f"Timeout for ID: {id_val}")
             solo_queue_elo.append(None)
             flex_queue_elo.append(None)
         except requests.exceptions.RequestException as e:
-            print(f"Request error for ID: {id_val}: {e}")
+            logger.error(f"Request error for ID: {id_val}: {e}")
             solo_queue_elo.append(None)
             flex_queue_elo.append(None)
         
@@ -120,6 +124,7 @@ def elo_check() -> tuple[list, list, pd.DataFrame]:
     return solo_queue_elo, flex_queue_elo, puuid_df
 
 def main():
+    logger.info("Starting ELO check process")
     solo_queue_elo, flex_queue_elo, puuid_df = elo_check()
 
     # Filter out None values and create DataFrames directly from the list of dictionaries
@@ -129,10 +134,12 @@ def main():
     solo_df: pd.DataFrame = pd.DataFrame(solo_queue_data)
     flex_df: pd.DataFrame = pd.DataFrame(flex_queue_data)
     
-    print("Solo Queue Data:")
-    print(solo_df)
-    print("\nFlex Queue Data:")
-    print(flex_df)
+    logger.info("Processing solo queue data")
+    solo_df: pd.DataFrame = pd.DataFrame(solo_queue_data)
+    flex_df: pd.DataFrame = pd.DataFrame(flex_queue_data)
+    
+    logger.debug(f"Solo Queue Data: {solo_df}")
+    logger.debug(f"Flex Queue Data: {flex_df}")
     
     if not solo_df.empty:
         # Filter puuid_df to match the length of solo_df
@@ -146,11 +153,11 @@ def main():
         
         solo_df: pd.DataFrame = solo_df.rename(columns={'leaguePoints': 'league_points'})
         
+        logger.info("Loading solo queue data to database")
         solo_df.to_sql(name="elo_history", con=engine, if_exists='append', index=False)
-        
-        print("Solo queue data loaded successfully into the database.")
+        logger.info("Solo queue data loaded successfully into the database.")
     else:
-        print("No solo queue data to load.")
+        logger.warning("No solo queue data to load.")
         
     if not flex_df.empty:
         valid_player_ids = [puuid_df.index[i] for i, elo in enumerate(flex_queue_elo) if elo is not None]
@@ -163,11 +170,15 @@ def main():
         
         flex_df: pd.DataFrame = flex_df.rename(columns={'leaguePoints': 'league_points'})
         
+        logger.info("Loading flex queue data to database")
         flex_df.to_sql(name="elo_history", con=engine, if_exists='append', index=False)
-        
-        print("Flex queue data loaded successfully into the database.")
+        logger.info("Flex queue data loaded successfully into the database.")
     else:
-        print("No flex queue data to load.")
+        logger.warning("No flex queue data to load.")
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        logger.error(f"Unhandled exception in main: {e}", exc_info=True)
+        raise
