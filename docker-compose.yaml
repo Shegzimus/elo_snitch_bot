@@ -1,20 +1,43 @@
 services:
   pgdatabase:
     image: postgres:13
-    env_file:
-      - pgadmin.env
+    # Defaults match the credentials the existing snitch_bot_postgres_data volume
+    # was initialised with, and config.py's fallbacks. Override via shell env or
+    # a .env file at the project root -- do not commit real credentials here.
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-root}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-root}
+      POSTGRES_DB: ${POSTGRES_DB:-snitch_bot_db}
     volumes:
       - "./snitch_bot_postgres_data:/var/lib/postgresql/data:rw"
+    # Host port is configurable: other projects on this machine also bind 5432.
+    # Set POSTGRES_PORT in a .env at the project root (for compose) and in
+    # config/.env (for the Python client) to keep the two in agreement.
     ports:
-      - "5432:5432"
-  # pgadmin:
-  #   image: dpage/pgadmin4
-  #   env_file:
-  #     - pgadmin.env
-  #   ports:
-  #     - "8080:80"
-  #   depends_on:
-  #     - pgdatabase
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-root} -d ${POSTGRES_DB:-snitch_bot_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  pgadmin:
+    image: dpage/pgadmin4
+    env_file:
+      - config/pgadmin.env
+    environment:
+      # Preregisters the snitch_bot connection. pgAdmin only reads PGADMIN_*
+      # variables -- the DB_HOST/DB_USER/DB_PASS block in pgadmin.env is inert
+      # and does nothing, which is why pgAdmin used to open with no servers and
+      # make you add one by hand.
+      PGADMIN_SERVER_JSON_FILE: /pgadmin4/servers.json
+    volumes:
+      - "./config/pgadmin_servers.json:/pgadmin4/servers.json:ro"
+    # 8080 is taken by httpd (XAMPP/Apache) on this machine.
+    ports:
+      - "${PGADMIN_PORT:-5051}:80"
+    depends_on:
+      pgdatabase:
+        condition: service_healthy
 
   # airflow_postgres:
   #   image: postgres:15-alpine

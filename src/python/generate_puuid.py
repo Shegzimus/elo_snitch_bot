@@ -1,127 +1,109 @@
-import requests
-import os
+import time
+from typing import Optional
+
 import pandas as pd
-from dotenv import load_dotenv
-from sqlalchemy import create_engine, text
-from typing import Dict, Optional, Tuple
-from logger_config import setup_logger, get_logger
+import requests
+from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
+
+import config
+from logger_config import setup_logger
 
 logger = setup_logger(__name__, 'generate_puuid.log')
 
-load_dotenv(dotenv_path=os.path.join("config", ".env"))
-
-engine = create_engine("postgresql://root:root@localhost:5432/snitch_bot_db")
+engine = config.get_engine()
 
 
-def ensure_puuid_table_exists() -> None:
-    """Ensure the puuid table exists in the database."""
-    with engine.begin() as connection:
-        connection.execute(text("""
-            CREATE TABLE IF NOT EXISTS public.puuid (
-                id INTEGER PRIMARY KEY, 
-                index INTEGER,
-                puuid TEXT
-            )
-        """))
-
-
-def fetch_player_data() -> pd.DataFrame:
-    """Fetch player data including existing puuids if available."""
+def fetch_players_without_puuid() -> pd.DataFrame:
+    """Players registered via the form that still need a puuid resolved."""
     query = """
-    SELECT 
-        index AS id,
-        summ_id AS summoner_name,
-        player_tag AS tag,
-        puuid
-    FROM public.form_responses_2
+    SELECT id, summ_id, player_tag
+    FROM public.players
+    WHERE puuid IS NULL
+    ORDER BY id
     """
     with engine.connect() as connection:
         return pd.read_sql(query, connection, index_col='id')
 
 
-def update_puuid_in_form_responses_2(player_id: int, puuid: str) -> None:
-    """Update a player's puuid in the form_responses_2 table."""
+def set_puuid(player_key: int, puuid: str) -> None:
+    """Store a resolved puuid against a player."""
     with engine.begin() as connection:
         connection.execute(
-            text("UPDATE form_responses_2 SET puuid = :puuid WHERE index = :id"),
-            {"puuid": puuid, "id": player_id}
+            text("UPDATE public.players SET puuid = :puuid WHERE id = :id"),
+            {"puuid": puuid, "id": player_key},
         )
 
 
-def get_puuid_from_riot(summoner_name: str, tag: str, api_key: str) -> Optional[str]:
-    """Get puuid from Riot API using summoner name and tag."""
-    url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{summoner_name}/{tag}"
-    headers = {"X-Riot-Token": api_key}
-    
+def get_puuid_from_riot(summoner_name: str, tag: str) -> Optional[str]:
+    """Resolve a Riot ID (name#tag) to a puuid via account-v1."""
+    url = (
+        f"{config.RIOT_ACCOUNT_BASE_URL}/riot/account/v1/accounts/by-riot-id/"
+        f"{requests.utils.quote(summoner_name)}/{requests.utils.quote(tag)}"
+    )
+
     try:
-        response = requests.get(url, headers=headers, timeout=10)
+        response = requests.get(url, headers=config.riot_headers(), timeout=10)
         if response.status_code == 200:
             return response.json().get("puuid")
-        print(f"API Error for {summoner_name}#{tag}: {response.status_code} - {response.text}")
+        if response.status_code == 404:
+            logger.warning(f"No Riot account found for {summoner_name}#{tag}")
+        else:
+            logger.error(
+                f"API error for {summoner_name}#{tag}: "
+                f"{response.status_code} - {response.text[:200]}"
+            )
     except requests.RequestException as e:
-        print(f"Request failed for {summoner_name}#{tag}: {e}")
-    
+        logger.error(f"Request failed for {summoner_name}#{tag}: {e}")
+
     return None
 
 
-def process_players() -> Dict[int, str]:
-    """Process all players, updating puuids as needed."""
-    api_key = os.getenv("RIOT_API_KEY") or os.getenv("riot_api_key")
-    if not api_key:
-        raise ValueError("Riot API key not found in environment variables.")
-
-    df = fetch_player_data()
+def process_players() -> int:
+    """Resolve and persist puuids for everyone missing one. Returns the count updated."""
+    df = fetch_players_without_puuid()
     if df.empty:
-        logger.warning("No player data found")
-        return {}
+        logger.info("All players already have a puuid")
+        return 0
 
-    logger.info(f"Processing {len(df)} players for PUUID updates")
-    puuid_map = {}
+    logger.info(f"Resolving puuids for {len(df)} players")
     updated_count = 0
-    
-    for player_id, row in df.iterrows():
-        summoner_name = row['summoner_name']
-        tag = row['tag']
-        existing_puuid = row.get('puuid')
-        
-        if pd.notna(existing_puuid) and existing_puuid:
-            puuid_map[player_id] = existing_puuid
-            logger.debug(f"Skipping {summoner_name}#{tag} - PUUID already exists")
+
+    for player_key, row in df.iterrows():
+        riot_id = f"{row['summ_id']}#{row['player_tag']}"
+        puuid = get_puuid_from_riot(row['summ_id'], row['player_tag'])
+
+        if not puuid:
+            logger.warning(f"Could not resolve {riot_id}")
+            time.sleep(0.1)
             continue
-            
-        puuid = get_puuid_from_riot(summoner_name, tag, api_key)
-        if puuid:
-            puuid_map[player_id] = puuid
-            update_puuid_in_form_responses_2(player_id, puuid)
-            updated_count += 1
-            logger.info(f"Updated puuid for {summoner_name}#{tag}")
+
+        try:
+            set_puuid(player_key, puuid)
+        except IntegrityError:
+            # The puuid is already claimed by another players row, i.e. this is
+            # the same human registered twice under Riot IDs that differ only by
+            # characters Riot ignores, or under a since-changed name. Leave the
+            # row unresolved and report it -- merging is sql/migrations/002's job,
+            # not something to do silently mid-run.
+            logger.error(
+                f"{riot_id} resolves to a puuid already owned by another player "
+                f"(players.id={player_key} left unresolved). Run "
+                f"sql/migrations/002_normalize_and_merge_players.sql to merge."
+            )
         else:
-            logger.warning(f"Failed to get puuid for {summoner_name}#{tag}")
-            puuid_map[player_id] = None
-    
-    if updated_count > 0:
-        logger.info(f"Updated {updated_count} player puuids")
-    
-    return puuid_map
+            updated_count += 1
+            logger.info(f"Resolved puuid for {riot_id}")
+
+        time.sleep(0.1)
+
+    return updated_count
 
 
 def main():
-    logger.info("Starting puuid update process")
-    
-    ensure_puuid_table_exists()
-    
-    puuid_map = process_players()
-    
-    if puuid_map:
-        logger.info(f"Processed {len(puuid_map)} players")
-        df = pd.DataFrame(
-            [(player_id, puuid) for player_id, puuid in puuid_map.items() if puuid],
-            columns=['player_id', 'puuid']
-        )
-        logger.info("Summary of puuids:")
-        logger.debug(f"\n{df}")
-    else:
-        logger.warning("No players were processed")
+    logger.info("Starting puuid resolution process")
+    updated = process_players()
+    logger.info(f"Resolved {updated} new puuids")
 
 
 if __name__ == "__main__":

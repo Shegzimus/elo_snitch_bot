@@ -1,0 +1,4 @@
+# Development-only dependencies. Not installed into the Airflow image.
+#   pip install -r config/requirements.dev.txt
+
+pytest>=8.0
