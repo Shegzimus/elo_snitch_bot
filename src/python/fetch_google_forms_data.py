@@ -1,3 +1,5 @@
+import unicodedata
+
 import pandas as pd
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
@@ -49,6 +51,26 @@ def test_network_connectivity() -> None:
             logger.debug(traceback.format_exc())
 
 
+def normalize_riot_component(value) -> str:
+    """Clean one half of a Riot ID as submitted through the Google Form.
+
+    Form responses arrive with characters Riot's API ignores but a unique index
+    does not: trailing spaces, non-breaking spaces, and bidi isolates
+    (U+2066/U+2069) or zero-width joiners pasted in from phone keyboards. A '#'
+    is also stripped anywhere in the string -- people type it into the tag field
+    in inconsistent positions.
+
+    Mirrors public.normalize_riot_component in sql/migrations/002.
+    """
+    if not isinstance(value, str):
+        return ''
+    # NFKC folds non-breaking spaces and other compatibility forms to ASCII.
+    value = unicodedata.normalize('NFKC', value)
+    # Category Cf is "format" -- zero-width and bidi control characters.
+    value = ''.join(ch for ch in value if unicodedata.category(ch) != 'Cf')
+    return value.replace('#', '').strip()
+
+
 def fetch_google_sheet_data(range_name: str = None) -> pd.DataFrame:
     """Read form responses from the Google Sheet into a normalised DataFrame."""
     range_name = range_name or config.GOOGLE_SHEET_RANGE
@@ -90,12 +112,12 @@ def fetch_google_sheet_data(range_name: str = None) -> pd.DataFrame:
     }, inplace=True)
 
     df['registered_at'] = pd.to_datetime(df['registered_at'], errors='coerce')
-    df['player_tag'] = df['player_tag'].str.lstrip("#").str.strip()
-    df['summ_id'] = df['summ_id'].str.strip()
+    df['summ_id'] = df['summ_id'].map(normalize_riot_component)
+    df['player_tag'] = df['player_tag'].map(normalize_riot_component)
 
     # Drop submissions we cannot build a Riot ID from.
-    df = df[df['summ_id'].notna() & (df['summ_id'] != '')]
-    df = df[df['player_tag'].notna() & (df['player_tag'] != '')]
+    df = df[df['summ_id'] != '']
+    df = df[df['player_tag'] != '']
 
     return df.sort_values('registered_at')
 
