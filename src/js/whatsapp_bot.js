@@ -8,12 +8,18 @@ const path = require('path');
 
 console.log("Starting ELO Snitch Bot...");
 
-// Ensure the .wwebjs_auth directory exists
+// All paths are resolved from this file, not the CWD, so the bot can be started
+// from anywhere (npm start at the repo root, cron, systemd).
+const PROJECT_ROOT = path.resolve(__dirname, '../..');
+const DATA_DIR = path.join(PROJECT_ROOT, 'data');
+
+// Ensure the .wwebjs_auth directory exists. Stays next to this file so the
+// existing logged-in session keeps working; already gitignored.
 const authDir = path.join(__dirname, '.wwebjs_auth');
 if (!fsSync.existsSync(authDir)) {
     fsSync.mkdirSync(authDir, { recursive: true });
 }
-const envPath = path.resolve(__dirname, '../../config/.env');
+const envPath = path.join(PROJECT_ROOT, 'config', '.env');
 console.log('Looking for .env file at:', envPath);
 if (!fsSync.existsSync(envPath)) {
     console.error('.env file not found at:', envPath);
@@ -259,7 +265,7 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // Rest of your functions (keeping them the same)
 async function getLatestEloFile() {
-    const eloChangesDir = '../../data/elo_changes';
+    const eloChangesDir = path.join(DATA_DIR, 'elo_changes');
     
     // Check cache first
     const cacheKey = getCacheKey('elo_file');
@@ -314,7 +320,7 @@ async function getLatestEloFile() {
 }
 
 async function getLatestWinrateFile() {
-    const winrateDir = '../../data/winrate/solo';
+    const winrateDir = path.join(DATA_DIR, 'winrate', 'solo');
     
     // Check cache first
     const cacheKey = getCacheKey('winrate_file');
