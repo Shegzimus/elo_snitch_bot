@@ -68,6 +68,7 @@ elo_snitch_bot/
 │   │   └── elo_tracker.py     # ELO tracking and reporting
 │   └── js/               # JavaScript source code
 │       └── whatsapp_bot.js    # WhatsApp bot implementation
+├── sql/migrations/       # Ordered, re-runnable schema migrations
 ├── .env                  # Environment variables
 ├── Dockerfile            # Docker configuration
 └── docker-compose.yaml   # Docker Compose configuration
@@ -77,10 +78,39 @@ elo_snitch_bot/
 
 1. Clone the repository
 2. Create and configure your `.env` file as described above
-3. Build and start the Docker containers:
+3. Start Postgres:
 ```bash
-docker-compose up --build
+docker compose up -d pgdatabase
 ```
+   If port 5432 is already taken by another project, set `POSTGRES_PORT` in a
+   `.env` at the repo root (for compose) **and** in `config/.env` (for the
+   Python client) so the two agree:
+```bash
+POSTGRES_PORT=5433 docker compose up -d pgdatabase
+```
+4. Apply database migrations, in order:
+```bash
+docker exec -i <postgres-container> psql -U root -d snitch_bot_db \
+  -v ON_ERROR_STOP=1 < sql/migrations/001_consolidate_players.sql
+```
+   Then sanity-check the result — every count in the output should show zero
+   orphans before you rely on it:
+```bash
+docker exec -i <postgres-container> psql -U root -d snitch_bot_db \
+  < sql/migrations/001_verify.sql
+```
+5. Start the WhatsApp bot (from the repo root):
+```bash
+npm install && npm start
+```
+
+### Player identity
+
+Players live in a single `players` table keyed on their Riot ID
+(`summ_id` + `player_tag`). Earlier versions keyed players on the *row index of
+the Google Sheet*, which meant deleting or reordering a sheet row silently
+reassigned that player's entire ELO history to someone else. `001` migrates off
+that scheme; `players.legacy_id` retains the old index for auditing only.
 
 ## Accessing the Application
 
@@ -98,6 +128,61 @@ The bot runs hourly and executes the following tasks in sequence:
 2. `generate_puuid.py` - Generate PUUIDs for players
 3. `elo_check.py` - Check current ELO for all players
 4. `elo_tracker.py` - Track and report ELO changes
+
+## Ports
+
+Two `.env` files, deliberately separate:
+
+| File | Read by | Purpose |
+|---|---|---|
+| `.env` (repo root) | docker compose only | host port substitution in `docker-compose.yaml` |
+| `config/.env` | the Python pipeline | Riot/Google credentials, DB connection |
+
+`POSTGRES_PORT` must be set to the same value in both, or the pipeline will
+connect to a different database than the one compose published.
+
+Defaults are `POSTGRES_PORT=5432` and `PGADMIN_PORT=5051`. Override in the root
+`.env` when another project already binds those.
+
+## pgAdmin
+
+Browse to `http://localhost:${PGADMIN_PORT}` and log in with
+`PGADMIN_DEFAULT_EMAIL` / `PGADMIN_DEFAULT_PASSWORD` from `config/pgadmin.env`.
+
+The `snitch_bot` server is preregistered from `config/pgadmin_servers.json`.
+Expanding it prompts once for the Postgres password (`POSTGRES_USER`'s password,
+`root` by default) — tick *Save Password* to be asked only once.
+
+Note that pgAdmin reads **only** `PGADMIN_*` variables. The `DB_HOST`/`DB_PORT`/
+`DB_USER`/`DB_PASS`/`DB_NAME` entries in `config/pgadmin.env` are inert; the
+connection is defined in `pgadmin_servers.json` instead. That file uses the
+compose service name `pgdatabase` and its **internal** port 5432, not the
+published host port.
+
+## Tests
+
+```bash
+pip install -r config/requirements.dev.txt
+pytest
+```
+
+The suite covers the ranked-ladder maths, which has no database or network
+dependency. `ladder_points` is verified **exhaustively** — every reachable rank
+from Iron IV 0 LP to Challenger is enumerated and asserted strictly increasing —
+rather than by sampled examples.
+
+### Why ladder points exist
+
+Riot's `league_points` resets to near zero on promotion, so subtracting two raw
+values reports a tier climb as a large loss. Gold IV 98 LP → Platinum IV 4 LP
+came out as **-94 LP** while the player had in fact gained 306. Because
+`get_top_changes` then ranked by absolute LP, the leaderboard was dominated by
+promotions masquerading as the worst losses of the day — the headline output was
+wrong precisely when something worth reporting had happened.
+
+`ladder_points` maps a rank onto one monotonic scale
+(`tier * 400 + division * 100 + lp`) before differencing, so the sign always
+agrees with the direction the player actually moved.
 
 ## Troubleshooting
 

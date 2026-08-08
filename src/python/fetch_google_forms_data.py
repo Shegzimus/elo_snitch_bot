@@ -1,101 +1,83 @@
-import os
-from dotenv import load_dotenv
+import unicodedata
+
+import pandas as pd
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
-import pandas as pd
-from sqlalchemy import create_engine, text
-from logger_config import setup_logger, get_logger
+from sqlalchemy import text
+
+import config
+from logger_config import setup_logger
 
 logger = setup_logger(__name__, 'fetch_google_forms_data.log')
 
-env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "config", ".env"))
+engine = config.get_engine()  # requires the Postgres container to be running
 
-if not os.path.exists(env_path):
-    raise FileNotFoundError(f"Could not find .env file at: {env_path}")
 
-load_dotenv(dotenv_path=env_path, override=True)
-
-# FOR DEBUGGING
-# print("Environment variables:", os.environ)
-# print(f"Google Sheet ID from .env: {os.getenv('google_sheet_id')}")
-
-engine:object = create_engine("postgresql://root:root@localhost:5432/snitch_bot_db") # will only work if the Postgres DB container is running
-
-def test_network_connectivity()-> None:
+def test_network_connectivity() -> None:
     """Test if we can reach Google's servers with proper SSL context"""
     logger.info("Testing network connectivity to Google services")
     import socket
     import ssl
-    
+
     test_hosts = [
         ('accounts.google.com', 443, '/.well-known/openid-configuration'),
         ('sheets.googleapis.com', 443, '/$discovery/rest?version=v4'),
         ('www.google.com', 443, '/')
     ]
-    
+
     for host, port, path in test_hosts:
         try:
             logger.info(f"Testing connection to {host}:{port}...")
-            
+
             context = ssl.create_default_context()
             context.check_hostname = True
             context.verify_mode = ssl.CERT_REQUIRED
-            
+
             with socket.create_connection((host, port), timeout=10) as sock:
                 logger.debug(f"TCP connection to {host}:{port} successful")
-                
+
                 with context.wrap_socket(sock, server_hostname=host) as ssock:
                     logger.debug(f"SSL handshake successful. Protocol: {ssock.version()}")
-                    
+
                     request = f"GET {path} HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n"
                     ssock.sendall(request.encode())
                     response = ssock.recv(4096).decode()
                     status_line = response.split('\r\n')[0]
                     logger.debug(f"HTTP request successful. Status: {status_line}")
-                    
+
         except Exception as e:
             logger.error(f"Error connecting to {host}:{port}: {str(e)}")
             import traceback
             logger.debug(traceback.format_exc())
 
-def create_google_sheets_service(credentials_path: str)-> object:
-    """Create and return an authorized Google Sheets API service instance."""
-    try:
-        credentials_path = os.path.abspath(credentials_path)
-        logger.info(f"Using credentials from: {credentials_path}")
-        
-        creds = service_account.Credentials.from_service_account_file(
-            credentials_path,
-            scopes=['https://www.googleapis.com/auth/spreadsheets.readonly']
-        )
-        
-        service = build('sheets', 'v4', credentials=creds, 
-                       cache_discovery=False,  
-                       static_discovery=False)  
-        
-        logger.info("Google Sheets service created successfully")
-        return service
-    except Exception as e:
-        logger.error(f"Error creating Google Sheets service: {str(e)}")
-        raise
 
-def fetch_google_sheet_data(
-        range_name: str = "Form Responses 1!A:D", 
-        credentials_path: str = None,
-        sort_by_timestamp: bool = True
-    ) -> pd.DataFrame:
-    
-    sheet_id:str = os.getenv("google_sheet_id")
-    
-    if not sheet_id:
-        raise ValueError("Google Sheet ID is not set in environment variables.")
+def normalize_riot_component(value) -> str:
+    """Clean one half of a Riot ID as submitted through the Google Form.
 
-    if not credentials_path:
-        credentials_path = os.path.abspath(os.path.join(
-            os.path.dirname(__file__), "..", "..", ".google", "credentials.json"
-        ))
-    
-    if not os.path.exists(credentials_path):
+    Form responses arrive with characters Riot's API ignores but a unique index
+    does not: trailing spaces, non-breaking spaces, and bidi isolates
+    (U+2066/U+2069) or zero-width joiners pasted in from phone keyboards. A '#'
+    is also stripped anywhere in the string -- people type it into the tag field
+    in inconsistent positions.
+
+    Mirrors public.normalize_riot_component in sql/migrations/002.
+    """
+    if not isinstance(value, str):
+        return ''
+    # NFKC folds non-breaking spaces and other compatibility forms to ASCII.
+    value = unicodedata.normalize('NFKC', value)
+    # Category Cf is "format" -- zero-width and bidi control characters.
+    value = ''.join(ch for ch in value if unicodedata.category(ch) != 'Cf')
+    return value.replace('#', '').strip()
+
+
+def fetch_google_sheet_data(range_name: str = None) -> pd.DataFrame:
+    """Read form responses from the Google Sheet into a normalised DataFrame."""
+    range_name = range_name or config.GOOGLE_SHEET_RANGE
+    sheet_id = config.google_sheet_id()
+    credentials_path = config.GOOGLE_CREDENTIALS_PATH
+
+    if not credentials_path.exists():
         raise ValueError(
             f"Google Cloud credentials file not found at: {credentials_path}\n"
             "Please follow these steps to set up credentials:\n"
@@ -103,82 +85,81 @@ def fetch_google_sheet_data(
             "2. Create a new project or select an existing one\n"
             "3. Enable the Google Sheets API\n"
             "4. Create a service account and download the JSON key file\n"
-            f"5. Save the file as 'credentials.json' in the '.google' directory at: {os.path.dirname(credentials_path)}"
+            f"5. Save the file as 'credentials.json' at: {credentials_path.parent}"
         )
 
-    SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
-
     creds = service_account.Credentials.from_service_account_file(
-        credentials_path, scopes=SCOPES)
+        str(credentials_path),
+        scopes=['https://www.googleapis.com/auth/spreadsheets.readonly'],
+    )
+    service = build('sheets', 'v4', credentials=creds,
+                    cache_discovery=False, static_discovery=False)
 
-    service:object = build('sheets', 'v4', credentials=creds)
+    result = service.spreadsheets().values().get(
+        spreadsheetId=sheet_id, range=range_name
+    ).execute()
+    values = result.get('values', [])
 
-    sheet:object = service.spreadsheets()
-    result:object = sheet.values().get(spreadsheetId=sheet_id, range=range_name).execute()
-    values:list[list[str]] = result.get('values', [])
+    if not values:
+        return pd.DataFrame()
 
-    values_df:pd.DataFrame = pd.DataFrame(values[1:], columns=values[0])  # Convert to DataFrame
-    values_df.rename(columns={
-        'index': 'id',
-        'Timestamp': 'timestamp',  
+    df = pd.DataFrame(values[1:], columns=values[0])
+    df.rename(columns={
+        'Timestamp': 'registered_at',
         "Tag line (e.g #EUW) ": "player_tag",
         "Summoner ID (case sensitive)": "summ_id",
-        "Region": "region"
+        "Region": "region",
     }, inplace=True)
 
-    values_df['timestamp'] = pd.to_datetime(values_df['timestamp'], errors='coerce')  # Convert timestamp to datetime
-    values_df['player_tag'] = values_df['player_tag'].str.lstrip("#")  # Strip '#' from player_tag
-    values_df['puuid'] = None
-    
-    if sort_by_timestamp and 'timestamp' in values_df.columns:
-        values_df = values_df.sort_values('timestamp')
+    df['registered_at'] = pd.to_datetime(df['registered_at'], errors='coerce')
+    df['summ_id'] = df['summ_id'].map(normalize_riot_component)
+    df['player_tag'] = df['player_tag'].map(normalize_riot_component)
 
-    return values_df
+    # Drop submissions we cannot build a Riot ID from.
+    df = df[df['summ_id'] != '']
+    df = df[df['player_tag'] != '']
 
-def get_latest_timestamp(db_connection: object, table_name: str) -> pd.Timestamp:
-    """Get the most recent timestamp from the database."""
-    allowed_tables = {"form_responses", "form_responses_2", "elo_history", "mastery", "puuid"}
-    if table_name not in allowed_tables:
-        raise ValueError(f"Invalid table name: {table_name}")
-    
-    with db_connection.connect() as conn:
-        query = text(f"SELECT MAX(timestamp) FROM {table_name}")
-        result = conn.execute(query)
-        latest_timestamp = result.scalar()
-        return pd.to_datetime(latest_timestamp) if latest_timestamp else None
+    return df.sort_values('registered_at')
 
-def load_to_db(df: pd.DataFrame, table_name: str, db_connection: object = engine):
-    """Load data to the database, appending only new records."""
-    with db_connection.connect() as conn:
-        inspector = db_connection.dialect.has_table(conn, table_name, schema='public')
-        table_exists = bool(inspector)
-    
-    if table_exists:
-        latest_timestamp = get_latest_timestamp(db_connection, table_name)
-        if latest_timestamp:
-            df = df[df['timestamp'] > latest_timestamp]
-            
-            if df.empty:
-                print("No new entries to add.")
-                return
-    
-    df.to_sql(
-        name=table_name,
-        con=db_connection,
-        if_exists='append' if table_exists else 'replace',
-        index=True
-    )
-    print(f"Successfully added {len(df)} new entries to {table_name} table.")
+
+def upsert_players(df: pd.DataFrame) -> int:
+    """Insert any player not already registered. Returns the number added.
+
+    Keyed on the Riot ID rather than sheet position, so re-ordering or deleting
+    rows in the sheet can no longer reassign a player's ELO history.
+    """
+    if df.empty:
+        logger.info("No form responses to load")
+        return 0
+
+    statement = text("""
+        INSERT INTO public.players (summ_id, player_tag, region, registered_at)
+        VALUES (:summ_id, :player_tag, :region, :registered_at)
+        ON CONFLICT (lower(summ_id), lower(player_tag)) DO NOTHING
+    """)
+
+    records = df[['summ_id', 'player_tag', 'region', 'registered_at']].to_dict('records')
+    for record in records:
+        if pd.isna(record['registered_at']):
+            record['registered_at'] = None
+
+    with engine.begin() as connection:
+        result = connection.execute(statement, records)
+        inserted = result.rowcount if result.rowcount and result.rowcount > 0 else 0
+
+    logger.info(f"{inserted} new player(s) registered out of {len(records)} responses")
+    return inserted
+
 
 def main():
     logger.info("Starting Google Forms data fetch process")
     df = fetch_google_sheet_data()
-    if df is None or df.empty:
+    if df.empty:
         logger.warning("No data was fetched from Google Sheets")
         return
-        
-    logger.info(f"Fetched {len(df)} total entries from Google Sheets")
-    load_to_db(df, table_name="form_responses_2", db_connection=engine)
+
+    logger.info(f"Fetched {len(df)} valid entries from Google Sheets")
+    upsert_players(df)
     logger.info("Google Forms data fetch process completed")
 
 
@@ -187,12 +168,11 @@ if __name__ == "__main__":
         test_network_connectivity()
         main()
     except Exception as e:
-        print(f"\n An error occurred: {str(e)}")
-        print("\n Troubleshooting steps:")
+        logger.error(f"Unhandled exception in main: {e}", exc_info=True)
+        print("\nTroubleshooting steps:")
         print("1. Verify your internet connection")
         print("2. Check if the Google Sheet ID is correct and shared with the service account")
         print("3. Ensure the Google Sheets API is enabled in your Google Cloud project")
         print("4. Verify the service account has the correct permissions")
         print("5. Check if your system time is synchronized")
-        print("\nFor more detailed error information, check the full traceback above.")
         raise

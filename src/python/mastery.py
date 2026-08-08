@@ -1,23 +1,20 @@
 import requests
-import os
 from datetime import datetime
 import pandas as pd
-from dotenv import load_dotenv
-from sqlalchemy import create_engine
-from logger_config import setup_logger, get_logger
+
+import config
+from logger_config import setup_logger
 
 logger = setup_logger(__name__, 'mastery.log')
 
-load_dotenv(dotenv_path=os.path.join("config", ".env"))
-
-engine:object = create_engine("postgresql://root:root@localhost:5432/snitch_bot_db")
+engine = config.get_engine()
 
 def fetch_puuid(db_connection: object) -> pd.DataFrame:
     logger.info("Fetching PUUID data from database")
     with db_connection.connect() as connection:
         df: pd.DataFrame = pd.read_sql(
-            "SELECT id, puuid FROM public.puuid", 
-            connection, 
+            "SELECT id, puuid FROM public.players WHERE puuid IS NOT NULL",
+            connection,
             index_col='id')
         if df.empty:
             logger.warning("No PUUID data found")
@@ -33,19 +30,19 @@ def mastery_check():
     logger.info("Starting champion mastery check")
     mastery_data = []
 
-    api_key: str = os.getenv("riot_api_key")
-    if not api_key:
-        raise ValueError("API key is not set in environment variables")
+    headers = config.riot_headers()
 
     puuid_df: pd.DataFrame = fetch_puuid(db_connection=engine)
     if puuid_df.empty:
         logger.warning("No PUUID data found")
         return pd.DataFrame()  # Return empty DataFrame consistently
-    
+
     for idx, row in puuid_df.iterrows():
         puuid = row['puuid']
-        url = f"https://euw1.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/{puuid}/top?api_key={api_key}"
-        headers = {"X-Riot-Token": api_key}    
+        url = (
+            f"{config.RIOT_PLATFORM_BASE_URL}"
+            f"/lol/champion-mastery/v4/champion-masteries/by-puuid/{puuid}/top"
+        )
         try:
             response = requests.get(url, headers=headers)      
             if response.status_code == 200:

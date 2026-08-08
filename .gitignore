@@ -23,8 +23,8 @@ config/pgadmin.env
 # Cache directories
 .wwebjs_cache/
 .wwebjs_auth
-.env
 
-
-# Logs
-logs
+# Runtime logs
+logs/
+# Root .env is docker-compose substitution only, and is machine-specific
+/.env
