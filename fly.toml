@@ -1,6 +1,8 @@
 # Fly.io deployment. See README "Deploying to Fly.io" for the one-time setup.
 app = "elo-snitch-bot"
-primary_region = "lhr"
+# fra to sit beside the Neon database in eu-central-1: the pipeline makes a lot
+# of small queries per run, and cross-region round trips add up.
+primary_region = "fra"
 
 # Chromium's peak during WhatsApp Web's initial sync runs well above the 512MB
 # the machine is allotted; swap absorbs it. Without this the machine OOM-loops
@@ -14,6 +16,12 @@ swap_size_mb = 512
 [env]
   PIPELINE_INTERVAL_SECONDS = "3600"
 
+# Exactly one machine, enforced with `fly scale count 1` -- there is no fly.toml
+# key for it, and flyctl's HA default is 2.
+#
+# A second machine gets its own volume, so it gets its own empty
+# .wwebjs_auth and sits at the QR screen forever. Scan it and things get worse:
+# both machines then answer every command, and the group sees each reply twice.
 [[mounts]]
   source = "snitch_data"
   destination = "/data"
