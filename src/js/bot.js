@@ -21,16 +21,17 @@ const ENV_PATH = path.join(PROJECT_ROOT, 'config', '.env');
 // Stays next to this file so an existing logged-in session keeps working.
 const AUTH_DIR = path.join(__dirname, '.wwebjs_auth');
 
-if (!fsSync.existsSync(ENV_PATH)) {
-    console.error(`No .env at ${ENV_PATH}`);
-    console.error('Create it with WHATSAPP_GROUP_ID set.');
-    process.exit(1);
+// Optional, because a container has no .env: Fly injects secrets as environment
+// variables. Missing configuration is caught by the check below, which is the
+// one that actually matters -- previously a missing file was fatal even when
+// every setting was already present in the environment.
+if (fsSync.existsSync(ENV_PATH)) {
+    dotenv.config({ path: ENV_PATH });
 }
-dotenv.config({ path: ENV_PATH });
 
 const rawGroupId = process.env.WHATSAPP_GROUP_ID;
 if (!rawGroupId) {
-    console.error('WHATSAPP_GROUP_ID is not set in config/.env');
+    console.error(`WHATSAPP_GROUP_ID is not set (looked in the environment and ${ENV_PATH})`);
     process.exit(1);
 }
 // The env may or may not carry the @g.us suffix.
@@ -50,6 +51,10 @@ const client = new Client({
     authStrategy: new LocalAuth({ dataPath: AUTH_DIR }),
     puppeteer: {
         headless: true,
+        // Set in the container to Debian's chromium, so the image does not have
+        // to carry Puppeteer's own ~500MB download. Unset locally, where
+        // undefined means "use the browser Puppeteer installed".
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -64,6 +69,14 @@ const client = new Client({
 client.on('qr', (qr) => {
     console.log('Scan this QR code with WhatsApp on your phone:');
     qrcode.generate(qr, { small: true });
+    // Log streaming (`fly logs`) mangles the block characters often enough that
+    // the art above can be unscannable. The payload is a fallback: render it
+    // with any QR generator. Off by default, and worth turning straight back
+    // off -- anyone holding this string can link their WhatsApp to the account,
+    // and log output gets pasted into chats and issue trackers.
+    if (process.env.LOG_QR_PAYLOAD === 'true') {
+        console.log(`QR payload: ${qr}`);
+    }
 });
 
 client.on('authenticated', () => console.log('Authenticated.'));

@@ -14,8 +14,15 @@ venv/
 # Node
 node_modules/
 npm-debug.log*
-.wwebjs_cache/
-.wwebjs_auth/
+# Same leading-**/ rule as __pycache__ above, and it matters more here: the live
+# session lives at src/js/.wwebjs_auth, so the bare form matched nothing and
+# baked WhatsApp credentials into every image.
+**/.wwebjs_cache/
+**/.wwebjs_auth/
+
+# Puppeteer's Chromium download (see .puppeteerrc.cjs) -- ~500MB of Windows
+# binaries that the Linux image has no use for.
+.cache/
 
 # Runtime state -- never belongs in an image
 snitch_bot_postgres_data/
@@ -27,10 +34,10 @@ config/.env
 config/*.env
 .google/
 
-# Not needed at build time
+# Not needed at build time. package-lock.json is deliberately absent from this
+# list: `npm ci` in Dockerfile.fly refuses to run without it.
 assets/
 README.md
 CLAUDE.md
 docker-compose.yaml
-package-lock.json
 requirements.txt

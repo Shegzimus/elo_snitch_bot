@@ -234,6 +234,96 @@ sudo systemctl status elo-snitch.timer
 sudo journalctl -u elo-snitch.service -f
 ```
 
+## Deploying to Fly.io
+
+One machine runs both the bot and the pipeline. They are coupled through the
+filesystem -- the pipeline writes `data/<folder>/latest.json`, `data.js` reads it
+-- so separating them would mean a second machine, a second volume and some way
+to share files between them.
+
+The machine cannot scale to zero. WhatsApp Web is an outbound websocket, so
+there is no inbound request for Fly to wake a stopped machine on; if it stops,
+the group loses the bot until you notice.
+
+**Roughly $3.35/mo** at the time of writing: ~$3.20 for an always-on
+`shared-cpu-1x` 512MB machine, $0.15 for a 1GB volume, $0 for Postgres on a free
+tier. Fly's plan minimum is higher than that, so it is likely what you actually
+pay. Check current prices before committing.
+
+### One-time setup
+
+Postgres first. Create a free database (Neon, Supabase, or similar), then apply
+the migrations to it from your machine:
+
+```bash
+psql "$NEON_URL" -f sql/migrations/001_consolidate_players.sql
+psql "$NEON_URL" -f sql/migrations/002_normalize_and_merge_players.sql
+```
+
+Then create the app and its volume. Pick a region near you -- `lhr` is the
+default in `fly.toml`:
+
+```bash
+fly launch --no-deploy --copy-config --name elo-snitch-bot
+fly volumes create snitch_data --size 1 --region lhr
+```
+
+Secrets. The Google service-account JSON is base64-encoded because Fly secrets
+are single-line:
+
+```bash
+fly secrets set \
+  DATABASE_URL="postgresql://..." \
+  WHATSAPP_GROUP_ID="1234567890@g.us" \
+  RIOT_API_KEY="RGAPI-..." \
+  RIOT_REGION="europe" \
+  RIOT_PLATFORM="euw1" \
+  GOOGLE_SHEET_ID="..." \
+  GOOGLE_SHEET_RANGE="Form Responses 1!A:D" \
+  GOOGLE_CREDENTIALS_B64="$(base64 -w0 .google/credentials.json)"
+```
+
+On Windows PowerShell the last one is:
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes(".google\credentials.json"))
+```
+
+### First deploy
+
+```bash
+fly deploy
+fly logs
+```
+
+The bot has no session yet, so it prints a QR code to the log. Scan it with
+WhatsApp on your phone (Settings -> Linked Devices). The code refreshes every
+20 seconds, so a missed one is not a problem.
+
+If log streaming mangles the QR into unscannable noise, set
+`LOG_QR_PAYLOAD=true` as a secret, redeploy, and paste the logged payload into
+any QR renderer. **Unset it once you are linked** -- that string links a device
+to your WhatsApp account, and log output has a way of ending up in chats.
+
+The session persists on the volume, so subsequent deploys do not re-prompt.
+
+### Operating it
+
+| | |
+|---|---|
+| `fly logs` | bot and pipeline output, interleaved |
+| `fly ssh console` | shell on the machine; snapshots are under `/data/snapshots` |
+| `fly status` | machine state and restart count |
+| `fly secrets set RIOT_API_KEY=...` | rotate the key; restarts the machine |
+
+A **Riot development key expires every 24 hours.** The pipeline will start
+failing a day after each rotation. That is survivable by design -- failures are
+logged and swallowed, and the bot keeps answering from the last good snapshot --
+but the numbers go stale until you set a fresh key. Apply for a personal or
+production key if this is meant to run unattended.
+
+Set `RUN_PIPELINE=false` to deploy the bot alone, serving whatever is already on
+the volume.
+
 ## Ports
 
 Two `.env` files, deliberately separate:

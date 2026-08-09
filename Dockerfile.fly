@@ -1,0 +1,59 @@
+# Fly.io image: the WhatsApp bot and the Python pipeline in one container.
+#
+# They are co-located because they are coupled through the filesystem -- the
+# pipeline writes data/<folder>/latest.json and data.js reads it. Splitting them
+# across two Fly machines would double the bill and require shared storage this
+# project does not have.
+#
+# The plain Dockerfile at the repo root builds the pipeline alone, for local
+# compose use. This one is the deployable artifact.
+
+FROM node:20-bookworm-slim
+
+# chromium: whatsapp-web.js drives a real browser. Debian's build is used
+#   instead of Puppeteer's own download -- see PUPPETEER_SKIP_DOWNLOAD below.
+# fonts-liberation: with no font installed, WhatsApp Web renders blank boxes and
+#   the QR handshake fails in ways that look like a network problem.
+# tini: Chromium forks freely and Node does not reap orphans, so without an init
+#   the machine accumulates zombies until it runs out of PIDs.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        chromium \
+        fonts-liberation \
+        ca-certificates \
+        python3 \
+        python3-venv \
+        tini \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Skipping the download saves ~500MB in the image and a slow layer on every
+# build; the executable path is what bot.js hands to puppeteer.launch().
+ENV PUPPETEER_SKIP_DOWNLOAD=1 \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
+WORKDIR /app
+
+# A venv, not a bare pip install: bookworm's system Python is marked
+# externally-managed and refuses to install into itself.
+COPY config/requirements.project.txt /tmp/requirements.project.txt
+RUN python3 -m venv /opt/venv \
+    && /opt/venv/bin/pip install --no-cache-dir -r /tmp/requirements.project.txt
+ENV PATH="/opt/venv/bin:${PATH}"
+
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+
+COPY src/ ./src/
+
+# The Fly volume mounts at /data. Both directories the code derives from
+# __dirname/__file__ are symlinked into it, so data.js, elo_tracker.py and
+# bot.js keep resolving paths exactly as they do on a laptop and none of them
+# needs to learn that Fly exists. entrypoint.sh creates the targets, because the
+# volume is empty on first boot.
+RUN ln -s /data/snapshots /app/data \
+    && ln -s /data/wwebjs_auth /app/src/js/.wwebjs_auth
+
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/usr/bin/tini", "--", "/entrypoint.sh"]

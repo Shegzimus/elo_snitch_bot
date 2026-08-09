@@ -1,0 +1,32 @@
+# Fly.io deployment. See README "Deploying to Fly.io" for the one-time setup.
+app = "elo-snitch-bot"
+primary_region = "lhr"
+
+# Chromium's peak during WhatsApp Web's initial sync runs well above the 512MB
+# the machine is allotted; swap absorbs it. Without this the machine OOM-loops
+# on first boot and never reaches the QR. Bumping memory to 1gb also fixes it,
+# at roughly +$2.50/mo.
+swap_size_mb = 512
+
+[build]
+  dockerfile = "Dockerfile.fly"
+
+[env]
+  PIPELINE_INTERVAL_SECONDS = "3600"
+
+[[mounts]]
+  source = "snitch_data"
+  destination = "/data"
+
+# Deliberately no [http_service] block. The bot holds an outbound websocket to
+# WhatsApp and serves no HTTP, so there is nothing to route to -- and nothing
+# for autostop to wake the machine on. It has to stay up.
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+
+[deploy]
+  # One machine, one volume. A rolling deploy would need a second volume to run
+  # the new machine beside the old one; replace in place instead. Costs a few
+  # seconds of downtime per deploy, during which commands go unanswered.
+  strategy = "immediate"
