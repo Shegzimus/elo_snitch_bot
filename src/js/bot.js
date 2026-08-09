@@ -70,29 +70,66 @@ client.on('authenticated', () => console.log('Authenticated.'));
 client.on('auth_failure', (message) => console.error('Authentication failed:', message));
 client.on('loading_screen', (percent) => console.log(`Loading ${percent}%`));
 client.on('disconnected', (reason) => console.warn('Disconnected:', reason));
+// Page errors surface minified (a bare "r"), so connection state is the more
+// useful signal when the bot stops responding.
+client.on('change_state', (state) => console.log('State:', state));
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Find the configured group, waiting for the chat store to populate.
+ *
+ * 'ready' fires before WhatsApp Web has finished syncing -- the loading_screen
+ * percentages continue arriving after it -- so getChats() throws a minified page
+ * error if called immediately. Retry until the store answers.
+ *
+ * Returns the chat, or null if it never resolved. Never throws: this lookup is
+ * diagnostics, and must not decide whether the bot runs.
+ */
+async function findGroup({ attempts = 20, delayMs = 3000 } = {}) {
+    for (let attempt = 1; attempt <= attempts; attempt += 1) {
+        let chats;
+        try {
+            chats = await client.getChats();
+        } catch {
+            await sleep(delayMs); // Store not exposed yet.
+            continue;
+        }
+
+        if (chats.length === 0) {
+            await sleep(delayMs); // Exposed but not yet synced.
+            continue;
+        }
+
+        const target = chats.find((chat) => chat.id._serialized === GROUP_ID);
+        if (target) {
+            return target;
+        }
+
+        // Chats loaded and none matched: the ID is wrong, and retrying will not
+        // change that. Printing the alternatives is the fastest way to fix it.
+        console.error(`No group matches WHATSAPP_GROUP_ID (${GROUP_ID}). Available groups:`);
+        chats.filter((chat) => chat.isGroup)
+            .forEach((chat) => console.error(`  ${chat.id._serialized}  ${chat.name}`));
+        return null;
+    }
+
+    return null;
+}
 
 client.on('ready', async () => {
     console.log('Client ready.');
+    // Commands are served from here regardless of the lookup below: the
+    // message_create handler filters on GROUP_ID and never needed the chat list.
+    console.log(`Listening for commands in ${GROUP_ID}`);
 
-    let target;
-    try {
-        const chats = await client.getChats();
-        target = chats.find((chat) => chat.id._serialized === GROUP_ID);
-    } catch (error) {
-        console.error('Could not list chats:', error.message);
-        return;
-    }
-
+    const target = await findGroup();
     if (!target) {
-        // Printing the available groups is the fastest way to fix a wrong ID.
-        console.error(`No group matches WHATSAPP_GROUP_ID (${GROUP_ID}). Available groups:`);
-        const chats = await client.getChats();
-        chats.filter((chat) => chat.isGroup)
-            .forEach((chat) => console.error(`  ${chat.id._serialized}  ${chat.name}`));
+        console.warn('Could not confirm the group. Commands are still answered if the ID is correct.');
         return;
     }
 
-    console.log(`Listening in "${target.name}".`);
+    console.log(`Confirmed group: "${target.name}"`);
 
     if (ANNOUNCE_ON_START) {
         try {
