@@ -22,6 +22,8 @@ config/pgadmin.env
 # Cache directories
 .wwebjs_cache/
 .wwebjs_auth
+# Chromium download, redirected here by .puppeteerrc.cjs
+.cache/
 
 # Runtime logs
 logs/
