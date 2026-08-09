@@ -2,9 +2,10 @@
   "name": "elo-snitch-bot",
   "version": "1.0.0",
   "description": "WhatsApp bot for ELO changes notifications",
-  "main": "src/js/whatsapp_bot.js",
+  "main": "src/js/bot.js",
   "scripts": {
-    "start": "node src/js/whatsapp_bot.js"
+    "start": "node src/js/bot.js",
+    "test": "node --test tests/js/*.test.js"
   },
   "dependencies": {
     "whatsapp-web.js": "^1.24.0",

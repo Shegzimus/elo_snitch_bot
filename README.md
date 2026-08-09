@@ -44,6 +44,12 @@ GOOGLE_SHEET_ID=your_sheet_id
 # Riot Games API
 RIOT_API_KEY=your_riot_api_key
 RIOT_REGION=na1
+
+# WhatsApp
+WHATSAPP_GROUP_ID=your_group_id
+# Announce the command list to the group on startup. Off by default -- the bot
+# restarts on every crash, and one announcement per restart is noise.
+ANNOUNCE_ON_START=false
 ```
 ## Directory Structure
 
@@ -64,8 +70,11 @@ elo_snitch_bot/
 │   │   ├── generate_puuid.py  # Player PUUID generation
 │   │   ├── elo_check.py       # ELO checking
 │   │   └── elo_tracker.py     # ELO tracking and reporting
-│   └── js/               # JavaScript source code
-│       └── whatsapp_bot.js    # WhatsApp bot implementation
+│   └── js/               # WhatsApp bot
+│       ├── bot.js             # Client wiring and event handlers
+│       ├── commands.js        # Command table and rate limiting
+│       ├── format.js          # Report formatting (pure, tested)
+│       └── data.js            # Reads the pipeline's latest.json
 ├── .env                  # Environment variables (repo root, for docker-compose)
 ├── Dockerfile            # Docker configuration
 └── docker-compose.yaml   # Docker Compose configuration
@@ -96,7 +105,8 @@ docker exec -i <postgres-container> psql -U root -d snitch_bot_db \
 docker exec -i <postgres-container> psql -U root -d snitch_bot_db \
   < sql/migrations/001_verify.sql
 ```
-5. Start the WhatsApp bot (from the repo root):
+5. Start the WhatsApp bot (from the repo root) — see [WhatsApp Bot](#whatsapp-bot)
+   for the first-run QR pairing:
 ```bash
 npm install && npm start
 ```
@@ -108,6 +118,55 @@ Players live in a single `players` table keyed on their Riot ID
 the Google Sheet*, which meant deleting or reordering a sheet row silently
 reassigned that player's entire ELO history to someone else. `001` migrates off
 that scheme; `players.legacy_id` retains the old index for auditing only.
+
+## WhatsApp Bot
+
+```bash
+npm install
+npm start
+```
+
+On first run the terminal prints a QR code. Open WhatsApp on your phone →
+**Settings → Linked devices → Link a device** → scan it. The session is saved to
+`src/js/.wwebjs_auth/`, so later starts skip the QR entirely. Delete that
+directory to force a re-pair.
+
+Once linked the bot prints `Listening in "<group name>"`. If instead it prints
+that no group matches `WHATSAPP_GROUP_ID`, it lists every group it can see with
+their IDs — copy the right one into `config/.env`.
+
+### Commands
+
+Recognised **only in the group named by `WHATSAPP_GROUP_ID`**, and only when the
+message is exactly the command. Anything else is ignored in silence, including
+in direct messages.
+
+| Command | Reports |
+|---|---|
+| `!elocheck` | Every tracked player's ELO change, grouped by queue |
+| `!topelo` | The five largest ELO changes |
+| `!winrate` | Solo/duo win rates, most active players, and totals |
+| `!help` | The command list |
+
+Each report ends with when the pipeline last ran, in both absolute and relative
+form: `_Last updated: 2026/08/08 21:32:50 (3 hours ago)_`. Reports read
+`data/*/latest.json`, so **the bot has nothing to show until the pipeline has run
+at least once**.
+
+Commands are rate limited to 5 per user per minute. Exceeding it is ignored
+silently rather than answered, so a flood is not amplified into a reply per
+message.
+
+### Tests
+
+```bash
+npm test
+```
+
+Node's built-in runner (`node --test`) — no test framework to install. The suite
+covers command parsing, timestamp handling, the three formatters, and the rate
+limiter. `bot.js` is deliberately untested: it is I/O only, and everything worth
+asserting was moved out of it.
 
 ## Pipeline Overview
 
