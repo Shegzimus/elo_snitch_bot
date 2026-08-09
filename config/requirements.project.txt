@@ -1,21 +1,6 @@
 # Runtime dependencies of the Python pipeline (src/python/).
-#
-# Intentionally UNPINNED. The Dockerfile installs this against Apache Airflow's
-# official constraints file for the pinned Airflow version, which resolves every
-# package to the version the base image already ships. Adding "==" pins here
-# fights the constraints and breaks the resolve.
-#
-# As of apache/airflow:3.0.2-python3.11 the base image already satisfies all of
-# these, so this install is a no-op -- it exists so a new dependency is picked
-# up automatically, and as the record of what the pipeline actually imports.
-#
-# Deliberately does NOT include apache-airflow: the base image provides it, and
-# reinstalling risks downgrading its pinned providers. The root requirements.txt
-# is a full freeze of the local venv and is not used for the image.
-#
-# NOTE: under these constraints the image resolves SQLAlchemy 1.4.x, while the
-# local venv runs 2.0.x. The pipeline uses engine.begin()/engine.connect() and
-# text() bound parameters, which behave identically across both.
+# These are installed into the Docker image via the Dockerfile.
+# Add dependencies here, not in the root requirements.txt (which is local-dev only).
 
 # HTTP + config
 requests

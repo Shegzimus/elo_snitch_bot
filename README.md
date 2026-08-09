@@ -1,8 +1,10 @@
 # ELO Snitch Bot
 
-A data pipeline to track and report on the ELO progress of members of the League of Naija group chat using a combination of Airflow, Python, node.js, and WhatsApp Web API.
+A data pipeline to track and report on the ELO progress of members of the League of Naija group chat using Python, PostgreSQL, node.js, and WhatsApp Web API.
 
 On launch, members of the gc were able to type commands which generated a table of elo changes for each member of the group chat who had registered in a Google form I shared with them. My machine is prod.
+
+The pipeline runs hourly via cron or systemd timer, fetching player data from Google Forms, generating PUUIDs, checking current ELO ratings, and reporting changes to the WhatsApp group.
 
 Developer hours wasted: [![wakatime](https://wakatime.com/badge/user/7bb4aa36-0e0a-4c8e-9ce5-180c23c37a37/project/3587c415-099d-40f9-afd5-0869b61cfe72.svg)](https://wakatime.com/badge/user/7bb4aa36-0e0a-4c8e-9ce5-180c23c37a37/project/3587c415-099d-40f9-afd5-0869b61cfe72)
 
@@ -42,10 +44,6 @@ GOOGLE_SHEET_ID=your_sheet_id
 # Riot Games API
 RIOT_API_KEY=your_riot_api_key
 RIOT_REGION=na1
-
-# Airflow Configuration
-AIRFLOW__CORE__LOAD_EXAMPLES=False
-AIRFLOW__CORE__EXECUTOR=LocalExecutor
 ```
 ## Directory Structure
 
@@ -53,23 +51,22 @@ AIRFLOW__CORE__EXECUTOR=LocalExecutor
 elo_snitch_bot/
 ├── assets/               # Static assets
 ├── config/               # Configuration files
-├── dags/                 # Airflow DAG definitions
 ├── data/                 # Data storage directory
 │   └── elo_changes/      # ELO change history
 ├── docker/               # Docker configuration
 ├── logs/                 # Application logs
 ├── node_modules/         # JavaScript dependencies
-├── plugins/              # Custom plugins
-├── sql/                  # SQL scripts
+├── sql/migrations/       # Ordered, re-runnable schema migrations
 ├── src/
 │   ├── python/           # Python source code
+│   │   ├── run_pipeline.py    # Pipeline orchestrator (replaces Airflow)
+│   │   ├── fetch_google_forms_data.py  # Fetch player data
 │   │   ├── generate_puuid.py  # Player PUUID generation
 │   │   ├── elo_check.py       # ELO checking
 │   │   └── elo_tracker.py     # ELO tracking and reporting
 │   └── js/               # JavaScript source code
 │       └── whatsapp_bot.js    # WhatsApp bot implementation
-├── sql/migrations/       # Ordered, re-runnable schema migrations
-├── .env                  # Environment variables
+├── .env                  # Environment variables (repo root, for docker-compose)
 ├── Dockerfile            # Docker configuration
 └── docker-compose.yaml   # Docker Compose configuration
 ```
@@ -112,22 +109,71 @@ the Google Sheet*, which meant deleting or reordering a sheet row silently
 reassigned that player's entire ELO history to someone else. `001` migrates off
 that scheme; `players.legacy_id` retains the old index for auditing only.
 
-## Accessing the Application
-
-Once the containers are running:
-1. Access Airflow UI at http://localhost:8080
-2. Default credentials:
-   - Username: admin
-   - Password: admin
-
-
 ## Pipeline Overview
 
-The bot runs hourly and executes the following tasks in sequence:
+The bot runs hourly (via cron or systemd timer) and executes the following tasks in sequence:
 1. `fetch_google_forms_data.py` - Fetch player data from Google Forms
 2. `generate_puuid.py` - Generate PUUIDs for players
 3. `elo_check.py` - Check current ELO for all players
 4. `elo_tracker.py` - Track and report ELO changes
+
+## Scheduling the Pipeline
+
+The pipeline is orchestrated by `src/python/run_pipeline.py`. Choose one of the following to run it hourly:
+
+### Option 1: Cron
+
+Add to your crontab (`crontab -e`):
+```bash
+0 * * * * cd /path/to/elo_snitch_bot && python -m src.python.run_pipeline >> logs/pipeline.log 2>&1
+```
+
+This runs at the top of every hour (minute 0). Adjust the minute field (first `0`) if you prefer a different time within the hour.
+
+### Option 2: Systemd Timer (Linux only)
+
+Create `/etc/systemd/system/elo-snitch.service`:
+```ini
+[Unit]
+Description=ELO Snitch Bot Pipeline
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=youruser
+WorkingDirectory=/path/to/elo_snitch_bot
+ExecStart=/usr/bin/python -m src.python.run_pipeline
+StandardOutput=journal
+StandardError=journal
+```
+
+Create `/etc/systemd/system/elo-snitch.timer`:
+```ini
+[Unit]
+Description=Run ELO Snitch Pipeline Hourly
+Requires=elo-snitch.service
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=1h
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+```
+
+Enable and start:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now elo-snitch.timer
+```
+
+Monitor:
+```bash
+sudo systemctl status elo-snitch.timer
+sudo journalctl -u elo-snitch.service -f
+```
 
 ## Ports
 

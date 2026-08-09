@@ -17,7 +17,6 @@ yarn-error.log*
 
 # Local env files
 config/.env
-config/airflow.env
 config/pgadmin.env
 
 # Cache directories
@@ -28,3 +27,4 @@ config/pgadmin.env
 logs/
 # Root .env is docker-compose substitution only, and is machine-specific
 /.env
+config/airflow.env
