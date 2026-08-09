@@ -17,7 +17,6 @@ yarn-error.log*
 
 # Local env files
 config/.env
-config/airflow.env
 config/pgadmin.env
 
 # Cache directories
